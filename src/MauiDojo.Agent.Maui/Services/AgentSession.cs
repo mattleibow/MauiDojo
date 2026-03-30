@@ -1,0 +1,217 @@
+// Copyright (c) Microsoft. All rights reserved.
+
+using System.Collections.Concurrent;
+using System.Collections.ObjectModel;
+using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Agents.AI;
+using Microsoft.Extensions.AI;
+
+namespace MauiDojo.Agent.Maui.Services;
+
+/// <summary>
+/// Default implementation of <see cref="IAgentSession"/>.
+/// Streams responses from an <see cref="AIAgent"/> and marshals UI updates to the main thread.
+/// </summary>
+public partial class AgentSession : ObservableObject, IAgentSession
+{
+    private readonly AIAgent _agent;
+    private readonly List<AITool> _tools = [];
+    private readonly ConcurrentDictionary<string, InvocationContext> _invocations = new();
+    private readonly ConcurrentDictionary<string, TaskCompletionSource<object>> _pendingResponses = new();
+    private CancellationTokenSource? _cts;
+
+    [ObservableProperty]
+    private bool _isProcessing;
+
+    public ObservableCollection<ChatMessageViewModel> Messages { get; } = [];
+
+    public ObservableCollection<ChatMessageViewModel> PendingMessages { get; } = [];
+
+    public event Action<ReadOnlyMemory<byte>>? StateSnapshotReceived;
+    public event Action<ReadOnlyMemory<byte>>? StateDeltaReceived;
+    public event Action? ResponseUpdated;
+
+    public AgentSession(AIAgent agent)
+    {
+        _agent = agent;
+    }
+
+    public void RegisterTool(AITool tool) => _tools.Add(tool);
+
+    public void RegisterTools(params AITool[] tools) => _tools.AddRange(tools);
+
+    public async Task SendAsync(params ChatMessage[] messages)
+    {
+        _cts?.Cancel();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        // Add user messages to the completed list
+        await MainThread.InvokeOnMainThreadAsync(() =>
+        {
+            foreach (var msg in messages)
+            {
+                Messages.Add(ChatMessageViewModel.FromChatMessage(msg));
+            }
+
+            IsProcessing = true;
+        });
+
+        try
+        {
+            // Build the full conversation history for the agent
+            var chatHistory = new List<ChatMessage>();
+            foreach (var vm in Messages)
+            {
+                chatHistory.Add(new ChatMessage(vm.Role, vm.Text));
+            }
+
+            var options = new AgentRunOptions();
+
+            // Pass registered frontend tools via options
+            if (_tools.Count > 0)
+            {
+                options.AdditionalProperties ??= new Dictionary<string, object?>();
+                options.AdditionalProperties["Tools"] = _tools.ToList();
+            }
+
+            ChatMessageViewModel? currentPending = null;
+
+            await foreach (var update in _agent.RunStreamingAsync(chatHistory, thread: null, options: options, cancellationToken: token))
+            {
+                token.ThrowIfCancellationRequested();
+
+                // Ensure we have a pending message for streaming content
+                if (currentPending is null)
+                {
+                    currentPending = new ChatMessageViewModel(update.Role ?? ChatRole.Assistant);
+                    await MainThread.InvokeOnMainThreadAsync(() => PendingMessages.Add(currentPending));
+                }
+                else if (update.Role is not null)
+                {
+                    await MainThread.InvokeOnMainThreadAsync(() => currentPending.Role = update.Role.Value);
+                }
+
+                await ProcessUpdateContentsAsync(update, currentPending, token);
+
+                ResponseUpdated?.Invoke();
+            }
+
+            // Promote pending message to completed
+            if (currentPending is not null)
+            {
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    PendingMessages.Remove(currentPending);
+                    Messages.Add(currentPending);
+                });
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Streaming was cancelled — clean up pending
+            await MainThread.InvokeOnMainThreadAsync(() => PendingMessages.Clear());
+        }
+        finally
+        {
+            await MainThread.InvokeOnMainThreadAsync(() => IsProcessing = false);
+        }
+    }
+
+    private async Task ProcessUpdateContentsAsync(
+        AgentRunResponseUpdate update,
+        ChatMessageViewModel currentPending,
+        CancellationToken token)
+    {
+        foreach (var content in update.Contents)
+        {
+            token.ThrowIfCancellationRequested();
+
+            switch (content)
+            {
+                case TextContent textContent:
+                    await MainThread.InvokeOnMainThreadAsync(() =>
+                    {
+                        currentPending.Text += textContent.Text;
+                        currentPending.Contents.Add(content);
+                    });
+                    break;
+
+                case FunctionCallContent functionCall:
+                    var invocation = new InvocationContext(
+                        functionCall.CallId,
+                        functionCall.Name,
+                        functionCall.Arguments);
+                    _invocations[functionCall.CallId] = invocation;
+                    await MainThread.InvokeOnMainThreadAsync(() => currentPending.Contents.Add(content));
+                    break;
+
+                case FunctionResultContent functionResult:
+                    if (_invocations.TryGetValue(functionResult.CallId, out var ctx))
+                    {
+                        ctx.SetResult(functionResult.Result);
+                    }
+                    await MainThread.InvokeOnMainThreadAsync(() => currentPending.Contents.Add(content));
+                    break;
+
+                case DataContent dataContent:
+                    HandleDataContent(dataContent);
+                    await MainThread.InvokeOnMainThreadAsync(() => currentPending.Contents.Add(content));
+                    break;
+
+                default:
+                    await MainThread.InvokeOnMainThreadAsync(() => currentPending.Contents.Add(content));
+                    break;
+            }
+        }
+    }
+
+    private void HandleDataContent(DataContent dataContent)
+    {
+        switch (dataContent.MediaType)
+        {
+            case "application/json":
+                StateSnapshotReceived?.Invoke(dataContent.Data);
+                break;
+            case "application/json-patch+json":
+                StateDeltaReceived?.Invoke(dataContent.Data);
+                break;
+        }
+    }
+
+    public Task<object> WaitForResponse(string key)
+    {
+        var tcs = _pendingResponses.GetOrAdd(key, _ => new TaskCompletionSource<object>());
+        return tcs.Task;
+    }
+
+    public void ProvideResponse(string key, object response)
+    {
+        if (_pendingResponses.TryRemove(key, out var tcs))
+        {
+            tcs.TrySetResult(response);
+        }
+    }
+
+    public void Reset()
+    {
+        _cts?.Cancel();
+        _cts = null;
+
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            Messages.Clear();
+            PendingMessages.Clear();
+        });
+
+        _tools.Clear();
+        _invocations.Clear();
+
+        // Cancel any outstanding HITL waits
+        foreach (var kvp in _pendingResponses)
+        {
+            kvp.Value.TrySetCanceled();
+        }
+        _pendingResponses.Clear();
+    }
+}
