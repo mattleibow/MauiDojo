@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright (c) Microsoft. All rights reserved. -->
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="MauiDojo.Agent.Maui.Templates.AssistantMessageTemplate">
+
+    <Border BackgroundColor="{AppThemeBinding Light=#F0F0F0, Dark=#2A2A2A}"
+            StrokeThickness="0"
+            Padding="14,10"
+            Margin="12,4,60,4"
+            HorizontalOptions="Start">
+        <Border.StrokeShape>
+            <RoundRectangle CornerRadius="12,12,12,2" />
+        </Border.StrokeShape>
+
+        <VerticalStackLayout Spacing="4">
+            <Label Text="🤖 Assistant"
+                   FontSize="12"
+                   FontAttributes="Bold"
+                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+
+            <Label Text="{Binding Text}"
+                   TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#E0E0E0}"
+                   FontSize="15"
+                   LineBreakMode="WordWrap" />
+        </VerticalStackLayout>
+    </Border>
+
+</ContentView>
