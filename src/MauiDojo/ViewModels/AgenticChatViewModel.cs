@@ -11,7 +11,7 @@ using Microsoft.Extensions.AI;
 
 namespace MauiDojo.ViewModels;
 
-public partial class AgenticChatViewModel : ObservableObject
+public partial class AgenticChatViewModel : ObservableObject, IDisposable
 {
     private readonly IBackgroundColorService _backgroundColorService;
 
@@ -72,5 +72,10 @@ public partial class AgenticChatViewModel : ObservableObject
         var message = suggestion.Message ?? suggestion.Text;
         InputText = string.Empty;
         await Session.SendAsync(new ChatMessage(ChatRole.User, message));
+    }
+
+    public void Dispose()
+    {
+        _backgroundColorService.ColorChanged -= OnColorChanged;
     }
 }

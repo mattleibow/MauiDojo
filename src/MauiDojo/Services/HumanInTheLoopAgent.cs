@@ -10,26 +10,47 @@ namespace MauiDojo.Services;
 /// scenario, instructing the inner agent to use plan-based tools that require
 /// user confirmation before execution.
 /// </summary>
-public class HumanInTheLoopAgent(AIAgent innerAgent) : DelegatingAIAgent(innerAgent)
+public sealed class HumanInTheLoopAgent : DelegatingAIAgent
 {
-    private const string SystemInstructions = """
-        You are a helpful planning assistant. When the user asks you to perform a task:
+    private static readonly ChatMessage InstructionsMessage = new(
+        ChatRole.System,
+        """
+        You help users create and execute plans. Follow this workflow:
 
-        1. First, create a plan using the `create_plan` tool with a list of steps.
-        2. Wait for the user to confirm the plan using the `confirm_plan` tool.
-        3. Once confirmed, execute each step and update progress using `update_plan_step`.
+        1. When asked to create a plan, use the `create_plan` tool with a list of step descriptions.
+        2. IMMEDIATELY after creating a plan, call `confirm_plan` with the plan object to ask for user approval.
+        3. Wait for the user to confirm which steps they want to proceed with.
+        4. Once confirmed, use `update_plan_step` to mark steps as 'completed' as you execute them.
 
-        Always present your plan before taking action. Never skip the confirmation step.
-        """;
+        IMPORTANT:
+        - Always call `confirm_plan` right after `create_plan` - don't skip this step!
+        - The plan parameter for `confirm_plan` should be the exact plan object returned from `create_plan`.
+        - Do NOT start executing steps until the user confirms.
+        - After receiving confirmation, update each selected step to 'completed' status.
+        """);
 
-    protected override IAsyncEnumerable<AgentResponseUpdate> RunCoreStreamingAsync(
+    public HumanInTheLoopAgent(AIAgent innerAgent)
+        : base(innerAgent)
+    {
+    }
+
+    public override Task<AgentRunResponse> RunAsync(
         IEnumerable<ChatMessage> messages,
-        AgentSession? session = null,
+        AgentThread? thread = null,
         AgentRunOptions? options = null,
         CancellationToken cancellationToken = default)
     {
-        // Prepend the system message with human-in-the-loop instructions
-        List<ChatMessage> augmented = [new(ChatRole.System, SystemInstructions), .. messages];
-        return InnerAgent.RunStreamingAsync(augmented, session, options, cancellationToken);
+        var messagesWithInstructions = messages.Prepend(InstructionsMessage);
+        return base.RunAsync(messagesWithInstructions, thread, options, cancellationToken);
+    }
+
+    public override IAsyncEnumerable<AgentRunResponseUpdate> RunStreamingAsync(
+        IEnumerable<ChatMessage> messages,
+        AgentThread? thread = null,
+        AgentRunOptions? options = null,
+        CancellationToken cancellationToken = default)
+    {
+        var messagesWithInstructions = messages.Prepend(InstructionsMessage);
+        return base.RunStreamingAsync(messagesWithInstructions, thread, options, cancellationToken);
     }
 }

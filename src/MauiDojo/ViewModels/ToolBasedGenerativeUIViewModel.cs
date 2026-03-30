@@ -3,6 +3,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MauiDojo.Agent.Maui;
@@ -27,6 +28,7 @@ public partial class ToolBasedGenerativeUIViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(HasPreviousHaiku))]
     [NotifyPropertyChangedFor(nameof(HasNextHaiku))]
     [NotifyPropertyChangedFor(nameof(HaikuPosition))]
+    [NotifyPropertyChangedFor(nameof(CurrentHaikuBackgroundColor))]
     private int currentHaikuIndex;
 
     public IAgentSession Session { get; }
@@ -45,6 +47,14 @@ public partial class ToolBasedGenerativeUIViewModel : ObservableObject
     public bool HasNextHaiku => CurrentHaikuIndex < Haikus.Count - 1;
 
     public string HaikuPosition => HasHaikus ? $"{CurrentHaikuIndex + 1} of {Haikus.Count}" : string.Empty;
+
+    /// <summary>
+    /// MAUI-compatible color extracted from the haiku's CSS gradient string.
+    /// </summary>
+    public Color CurrentHaikuBackgroundColor =>
+        CurrentHaiku is not null
+            ? ParseGradientToColor(CurrentHaiku.Gradient)
+            : Colors.Purple;
 
     public ObservableCollection<Suggestion> Suggestions { get; } =
     [
@@ -83,12 +93,35 @@ public partial class ToolBasedGenerativeUIViewModel : ObservableObject
                 OnPropertyChanged(nameof(HasPreviousHaiku));
                 OnPropertyChanged(nameof(HasNextHaiku));
                 OnPropertyChanged(nameof(HaikuPosition));
+                OnPropertyChanged(nameof(CurrentHaikuBackgroundColor));
             });
 
             return JsonSerializer.Serialize(haiku, MauiDojoSerializerContext.Default.Haiku);
         }
 
         Session.RegisterTool(AIFunctionFactory.Create(generate_haiku));
+    }
+
+    /// <summary>
+    /// Extracts the first hex color from a CSS gradient string for use as a MAUI background.
+    /// Falls back to purple if no hex color is found.
+    /// </summary>
+    private static Color ParseGradientToColor(string? gradient)
+    {
+        if (string.IsNullOrEmpty(gradient))
+            return Colors.Purple;
+
+        // Match hex colors: #RGB, #RRGGBB, #RRGGBBAA
+        var match = Regex.Match(gradient, @"#(?:[0-9a-fA-F]{3,8})\b");
+        if (match.Success && Color.TryParse(match.Value, out var color))
+            return color;
+
+        // Try named CSS colors
+        var namedMatch = Regex.Match(gradient, @"\b([a-zA-Z]+)\b");
+        if (namedMatch.Success && Color.TryParse(namedMatch.Value, out var namedColor))
+            return namedColor;
+
+        return Colors.Purple;
     }
 
     [RelayCommand]

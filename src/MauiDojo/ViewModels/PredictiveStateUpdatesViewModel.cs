@@ -13,7 +13,7 @@ using Microsoft.Extensions.AI;
 
 namespace MauiDojo.ViewModels;
 
-public partial class PredictiveStateUpdatesViewModel : ObservableObject
+public partial class PredictiveStateUpdatesViewModel : ObservableObject, IDisposable
 {
     [ObservableProperty]
     private string title = "Predictive State Updates";
@@ -35,6 +35,12 @@ public partial class PredictiveStateUpdatesViewModel : ObservableObject
 
     [ObservableProperty]
     private bool isAwaitingConfirmation;
+
+    /// <summary>
+    /// Tracks whether we've already captured PreviousDocument for this streaming turn.
+    /// Reset when streaming ends.
+    /// </summary>
+    private bool _previousDocumentCaptured;
 
     public IAgentSession Session { get; }
 
@@ -83,7 +89,14 @@ public partial class PredictiveStateUpdatesViewModel : ObservableObject
 
         MainThread.BeginInvokeOnMainThread(() =>
         {
-            PreviousDocument = CurrentDocument;
+            // Capture PreviousDocument ONCE when streaming starts (before first update),
+            // matching the Blazor pattern. Don't overwrite on subsequent snapshots.
+            if (!_previousDocumentCaptured && CurrentDocument is not null)
+            {
+                PreviousDocument = CurrentDocument;
+                _previousDocumentCaptured = true;
+            }
+
             CurrentDocument = state;
             IsStreaming = Session.IsProcessing;
         });
@@ -93,13 +106,19 @@ public partial class PredictiveStateUpdatesViewModel : ObservableObject
     {
         if (e.PropertyName == nameof(IAgentSession.IsProcessing) && !Session.IsProcessing)
         {
-            MainThread.BeginInvokeOnMainThread(() => IsStreaming = false);
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                IsStreaming = false;
+                _previousDocumentCaptured = false;
+            });
         }
     }
 
     [RelayCommand]
     private void AcceptChanges()
     {
+        // On accept: previousDocument = currentDocument (as in Blazor)
+        PreviousDocument = CurrentDocument;
         IsAwaitingConfirmation = false;
         Session.ProvideResponse("confirm_changes", new ConfirmChangesResult { Confirmed = true });
     }
@@ -107,6 +126,7 @@ public partial class PredictiveStateUpdatesViewModel : ObservableObject
     [RelayCommand]
     private void RejectChanges()
     {
+        // On reject: revert currentDocument to previousDocument
         if (PreviousDocument is not null)
             CurrentDocument = PreviousDocument;
         IsAwaitingConfirmation = false;
@@ -130,5 +150,11 @@ public partial class PredictiveStateUpdatesViewModel : ObservableObject
         var text = suggestion.Message ?? suggestion.Text;
         UserMessage = string.Empty;
         await Session.SendAsync(new ChatMessage(ChatRole.User, text));
+    }
+
+    public void Dispose()
+    {
+        Session.StateSnapshotReceived -= OnStateSnapshotReceived;
+        Session.PropertyChanged -= OnSessionPropertyChanged;
     }
 }

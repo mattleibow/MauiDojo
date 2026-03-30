@@ -52,13 +52,8 @@
                 <Frame Grid.Row="0"
                        Style="{StaticResource CardFrame}"
                        Padding="24"
-                       HorizontalOptions="Fill">
-                    <Frame.Background>
-                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                            <GradientStop Color="#667eea" Offset="0.0" />
-                            <GradientStop Color="#764ba2" Offset="1.0" />
-                        </LinearGradientBrush>
-                    </Frame.Background>
+                       HorizontalOptions="Fill"
+                       BackgroundColor="{Binding CurrentHaikuBackgroundColor}">
                     <VerticalStackLayout Spacing="16" VerticalOptions="Center">
                         <!-- Japanese text -->
                         <VerticalStackLayout Spacing="4" HorizontalOptions="Center"

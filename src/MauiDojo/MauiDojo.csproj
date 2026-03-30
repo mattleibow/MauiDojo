@@ -13,7 +13,9 @@
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
 
-    <MauiXamlInflator>SourceGen</MauiXamlInflator>
+    <!-- CommunityToolkit.Maui 11.2.0 has hard MAUI 9.x constraints that conflict with net10.0.
+         Suppress version conflict errors until a compatible version is available. -->
+    <NoWarn>$(NoWarn);NU1107;NU1608;NU1605</NoWarn>
 
     <!-- Display name -->
     <ApplicationTitle>MAUI Dojo</ApplicationTitle>
@@ -55,7 +57,7 @@
     <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-    <PackageReference Include="CommunityToolkit.Maui" Version="11.2.0" />
+    <PackageReference Include="CommunityToolkit.Maui" Version="13.0.0" />
   </ItemGroup>
 
   <ItemGroup>

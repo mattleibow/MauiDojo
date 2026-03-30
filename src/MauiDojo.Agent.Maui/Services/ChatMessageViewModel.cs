@@ -57,4 +57,17 @@ public partial class ChatMessageViewModel : ObservableObject
 
         return vm;
     }
+
+    /// <summary>Reconstructs a <see cref="ChatMessage"/> preserving all content items.</summary>
+    public ChatMessage ToChatMessage()
+    {
+        var msg = new ChatMessage(Role, [.. Contents]);
+
+        if (msg.Contents.Count == 0 && !string.IsNullOrEmpty(Text))
+        {
+            msg.Contents.Add(new TextContent(Text));
+        }
+
+        return msg;
+    }
 }

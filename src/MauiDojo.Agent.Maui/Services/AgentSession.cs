@@ -59,20 +59,22 @@ public partial class AgentSession : ObservableObject, IAgentSession
 
         try
         {
-            // Build the full conversation history for the agent
+            // Build the full conversation history preserving all content types
             var chatHistory = new List<ChatMessage>();
             foreach (var vm in Messages)
             {
-                chatHistory.Add(new ChatMessage(vm.Role, vm.Text));
+                chatHistory.Add(vm.ToChatMessage());
             }
 
-            var options = new AgentRunOptions();
-
-            // Pass registered frontend tools via options
+            // Pass registered frontend tools via ChatOptions.Tools,
+            // matching how Blazor's AgentBoundaryContext passes them.
+            AgentRunOptions? options = null;
             if (_tools.Count > 0)
             {
-                options.AdditionalProperties ??= new Dictionary<string, object?>();
-                options.AdditionalProperties["Tools"] = _tools.ToList();
+                options = new ChatClientAgentRunOptions(new ChatOptions
+                {
+                    Tools = [.. _tools]
+                });
             }
 
             ChatMessageViewModel? currentPending = null;
@@ -94,7 +96,7 @@ public partial class AgentSession : ObservableObject, IAgentSession
 
                 await ProcessUpdateContentsAsync(update, currentPending, token);
 
-                ResponseUpdated?.Invoke();
+                MainThread.BeginInvokeOnMainThread(() => ResponseUpdated?.Invoke());
             }
 
             // Promote pending message to completed
@@ -204,7 +206,7 @@ public partial class AgentSession : ObservableObject, IAgentSession
             PendingMessages.Clear();
         });
 
-        _tools.Clear();
+        // Don't clear _tools — they are registered once by the ViewModel
         _invocations.Clear();
 
         // Cancel any outstanding HITL waits

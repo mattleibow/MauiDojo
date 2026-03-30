@@ -13,6 +13,10 @@
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
 
+    <!-- CommunityToolkit.Maui 11.2.0 has hard MAUI 9.x constraints that conflict with net10.0.
+         Suppress version conflict errors until a compatible version is available. -->
+    <NoWarn>$(NoWarn);NU1107;NU1608;NU1605</NoWarn>
+
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
@@ -27,7 +31,7 @@
     <PackageReference Include="Microsoft.Extensions.AI" Version="9.6.0" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0-preview.3.25171.5" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-    <PackageReference Include="CommunityToolkit.Maui" Version="11.2.0" />
+    <PackageReference Include="CommunityToolkit.Maui" Version="13.0.0" />
   </ItemGroup>
 
 </Project>

@@ -71,7 +71,7 @@
                         <DataTemplate x:DataType="models:Step">
                             <Grid ColumnDefinitions="Auto,*" Padding="4" ColumnSpacing="8">
                                 <CheckBox Grid.Column="0"
-                                          IsChecked="True"
+                                          IsChecked="{Binding IsSelected}"
                                           Color="{StaticResource Primary}"
                                           VerticalOptions="Center" />
                                 <Label Grid.Column="1"

@@ -12,7 +12,7 @@ using Microsoft.Extensions.AI;
 
 namespace MauiDojo.ViewModels;
 
-public partial class AgenticGenerativeUIViewModel : ObservableObject
+public partial class AgenticGenerativeUIViewModel : ObservableObject, IDisposable
 {
     [ObservableProperty]
     private string _title = "Agentic Generative UI";
@@ -150,5 +150,11 @@ public partial class AgenticGenerativeUIViewModel : ObservableObject
         var message = suggestion.Message ?? suggestion.Text;
         InputText = string.Empty;
         await Session.SendAsync(new ChatMessage(ChatRole.User, message));
+    }
+
+    public void Dispose()
+    {
+        Session.StateSnapshotReceived -= OnStateSnapshotReceived;
+        Session.StateDeltaReceived -= OnStateDeltaReceived;
     }
 }

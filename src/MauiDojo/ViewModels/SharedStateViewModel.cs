@@ -12,7 +12,7 @@ using Microsoft.Extensions.AI;
 
 namespace MauiDojo.ViewModels;
 
-public partial class SharedStateViewModel : ObservableObject
+public partial class SharedStateViewModel : ObservableObject, IDisposable
 {
     [ObservableProperty]
     private string title = "Shared State";
@@ -140,15 +140,30 @@ public partial class SharedStateViewModel : ObservableObject
         Instructions = [.. Instructions],
     };
 
+    /// <summary>
+    /// Serializes the current recipe wrapped as <c>{ recipe: ... }</c> with snake_case
+    /// property names, matching the Blazor SharedStateDemo pattern.
+    /// </summary>
+    private static readonly JsonSerializerOptions s_snakeCaseOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+    };
+
+    private byte[] SerializeWrappedRecipe()
+    {
+        var recipe = BuildCurrentRecipe();
+        var stateWrapper = new RecipeResponse { Recipe = recipe };
+        return JsonSerializer.SerializeToUtf8Bytes(stateWrapper, s_snakeCaseOptions);
+    }
+
     [RelayCommand]
     private async Task ImproveWithAIAsync()
     {
-        var recipe = BuildCurrentRecipe();
-        var recipeJson = JsonSerializer.SerializeToUtf8Bytes(recipe, MauiDojoSerializerContext.Default.Recipe);
+        var stateBytes = SerializeWrappedRecipe();
         var message = new ChatMessage(ChatRole.User,
         [
             new TextContent("Improve this recipe"),
-            new DataContent(recipeJson, "application/json"),
+            new DataContent(stateBytes, "application/json"),
         ]);
         await Session.SendAsync(message);
     }
@@ -161,12 +176,11 @@ public partial class SharedStateViewModel : ObservableObject
             return;
 
         UserMessage = string.Empty;
-        var recipe = BuildCurrentRecipe();
-        var recipeJson = JsonSerializer.SerializeToUtf8Bytes(recipe, MauiDojoSerializerContext.Default.Recipe);
+        var stateBytes = SerializeWrappedRecipe();
         var message = new ChatMessage(ChatRole.User,
         [
             new TextContent(text),
-            new DataContent(recipeJson, "application/json"),
+            new DataContent(stateBytes, "application/json"),
         ]);
         await Session.SendAsync(message);
     }
@@ -175,12 +189,11 @@ public partial class SharedStateViewModel : ObservableObject
     private async Task SendSuggestionAsync(Suggestion suggestion)
     {
         var text = suggestion.Message ?? suggestion.Text;
-        var recipe = BuildCurrentRecipe();
-        var recipeJson = JsonSerializer.SerializeToUtf8Bytes(recipe, MauiDojoSerializerContext.Default.Recipe);
+        var stateBytes = SerializeWrappedRecipe();
         var message = new ChatMessage(ChatRole.User,
         [
             new TextContent(text),
-            new DataContent(recipeJson, "application/json"),
+            new DataContent(stateBytes, "application/json"),
         ]);
         await Session.SendAsync(message);
     }
@@ -218,5 +231,10 @@ public partial class SharedStateViewModel : ObservableObject
         var index = Instructions.IndexOf(instruction);
         if (index >= 0)
             Instructions.RemoveAt(index);
+    }
+
+    public void Dispose()
+    {
+        Session.StateSnapshotReceived -= OnStateSnapshotReceived;
     }
 }
