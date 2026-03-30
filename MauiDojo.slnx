@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="src/MauiDojo.Agent.Maui/MauiDojo.Agent.Maui.csproj" />
+  <Project Path="src/MauiDojo/MauiDojo.csproj" />
+</Solution>

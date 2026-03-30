@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="MauiDojo.Views.Demos.PredictiveStateUpdatesPage"
+             Title="Predictive State Updates">
+    <VerticalStackLayout Padding="24" Spacing="16">
+        <Label Text="Predictive State Updates" Style="{StaticResource PageTitle}" />
+        <Label Text="Demo coming soon..." TextColor="{StaticResource TextSecondary}" />
+    </VerticalStackLayout>
+</ContentPage>

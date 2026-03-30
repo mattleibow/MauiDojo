@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+       xmlns:views="clr-namespace:MauiDojo.Views"
+       xmlns:demos="clr-namespace:MauiDojo.Views.Demos"
+       x:Class="MauiDojo.AppShell"
+       Title="MAUI Dojo"
+       Shell.FlyoutBehavior="Flyout"
+       FlyoutHeaderBehavior="Fixed">
+
+    <Shell.FlyoutHeader>
+        <VerticalStackLayout Padding="16" BackgroundColor="{StaticResource Primary}">
+            <Label Text="🥋 MAUI Dojo"
+                   FontSize="24"
+                   FontAttributes="Bold"
+                   TextColor="White" />
+            <Label Text="AG-UI Demo Scenarios"
+                   FontSize="14"
+                   TextColor="White"
+                   Opacity="0.8" />
+        </VerticalStackLayout>
+    </Shell.FlyoutHeader>
+
+    <FlyoutItem Title="💬 Agentic Chat" Route="AgenticChat">
+        <ShellContent ContentTemplate="{DataTemplate demos:AgenticChatPage}" />
+    </FlyoutItem>
+
+    <FlyoutItem Title="🌤️ Backend Tool Rendering" Route="BackendToolRendering">
+        <ShellContent ContentTemplate="{DataTemplate demos:BackendToolRenderingPage}" />
+    </FlyoutItem>
+
+    <FlyoutItem Title="🙋 Human in the Loop" Route="HumanInTheLoop">
+        <ShellContent ContentTemplate="{DataTemplate demos:HumanInTheLoopPage}" />
+    </FlyoutItem>
+
+    <FlyoutItem Title="📊 Agentic Generative UI" Route="AgenticGenerativeUI">
+        <ShellContent ContentTemplate="{DataTemplate demos:AgenticGenerativeUIPage}" />
+    </FlyoutItem>
+
+    <FlyoutItem Title="🎋 Tool-Based Generative UI" Route="ToolBasedGenerativeUI">
+        <ShellContent ContentTemplate="{DataTemplate demos:ToolBasedGenerativeUIPage}" />
+    </FlyoutItem>
+
+    <FlyoutItem Title="🍳 Shared State" Route="SharedState">
+        <ShellContent ContentTemplate="{DataTemplate demos:SharedStatePage}" />
+    </FlyoutItem>
+
+    <FlyoutItem Title="📝 Predictive State Updates" Route="PredictiveStateUpdates">
+        <ShellContent ContentTemplate="{DataTemplate demos:PredictiveStateUpdatesPage}" />
+    </FlyoutItem>
+
+</Shell>

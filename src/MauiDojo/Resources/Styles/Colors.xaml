@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                    x:Class="MauiDojo.Resources.Styles.Colors">
+
+    <!-- Primary palette (inspired by the Blazor demo's gradient theme) -->
+    <Color x:Key="Primary">#6366F1</Color>
+    <Color x:Key="PrimaryDark">#4F46E5</Color>
+    <Color x:Key="PrimaryLight">#818CF8</Color>
+
+    <Color x:Key="Secondary">#EC4899</Color>
+    <Color x:Key="SecondaryDark">#DB2777</Color>
+
+    <Color x:Key="Tertiary">#8B5CF6</Color>
+
+    <!-- Text -->
+    <Color x:Key="TextPrimary">#212121</Color>
+    <Color x:Key="TextSecondary">#757575</Color>
+    <Color x:Key="TextOnPrimary">White</Color>
+
+    <!-- Backgrounds -->
+    <Color x:Key="BackgroundLight">#F9FAFB</Color>
+    <Color x:Key="BackgroundCard">White</Color>
+    <Color x:Key="BackgroundDark">#1F2937</Color>
+
+    <!-- Chat -->
+    <Color x:Key="UserMessageBg">#6366F1</Color>
+    <Color x:Key="UserMessageText">White</Color>
+    <Color x:Key="AssistantMessageBg">#F3F4F6</Color>
+    <Color x:Key="AssistantMessageText">#212121</Color>
+
+    <!-- Status -->
+    <Color x:Key="Success">#10B981</Color>
+    <Color x:Key="Warning">#F59E0B</Color>
+    <Color x:Key="Error">#EF4444</Color>
+    <Color x:Key="Info">#3B82F6</Color>
+
+    <!-- Weather card condition colors -->
+    <Color x:Key="WeatherSunny">#FEF3C7</Color>
+    <Color x:Key="WeatherCloudy">#E5E7EB</Color>
+    <Color x:Key="WeatherRainy">#DBEAFE</Color>
+    <Color x:Key="WeatherStormy">#C4B5FD</Color>
+
+    <!-- Borders -->
+    <Color x:Key="BorderLight">#E5E7EB</Color>
+    <Color x:Key="BorderMedium">#D1D5DB</Color>
+
+</ResourceDictionary>
