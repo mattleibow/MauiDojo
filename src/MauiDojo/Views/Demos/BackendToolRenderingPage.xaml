@@ -1,10 +1,92 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:MauiDojo.ViewModels"
+             xmlns:services="clr-namespace:MauiDojo.Agent.Maui.Services;assembly=MauiDojo.Agent.Maui"
+             xmlns:agentMaui="clr-namespace:MauiDojo.Agent.Maui;assembly=MauiDojo.Agent.Maui"
+             xmlns:templates="clr-namespace:MauiDojo.Views.Templates"
              x:Class="MauiDojo.Views.Demos.BackendToolRenderingPage"
+             x:DataType="vm:BackendToolRenderingViewModel"
              Title="Backend Tool Rendering">
-    <VerticalStackLayout Padding="24" Spacing="16">
-        <Label Text="Backend Tool Rendering" Style="{StaticResource PageTitle}" />
-        <Label Text="Demo coming soon..." TextColor="{StaticResource TextSecondary}" />
-    </VerticalStackLayout>
+
+    <Grid RowDefinitions="*,Auto,Auto" Padding="0">
+
+        <!-- Chat messages -->
+        <CollectionView Grid.Row="0"
+                        ItemsSource="{Binding Session.Messages}"
+                        Margin="0,8,0,0"
+                        ItemsUpdatingScrollMode="KeepLastItemInView">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="services:ChatMessageViewModel">
+                    <VerticalStackLayout Padding="16,4" Spacing="4">
+                        <!-- User message -->
+                        <Frame IsVisible="{Binding IsUser}"
+                               BackgroundColor="{StaticResource UserMessageBg}"
+                               BorderColor="Transparent"
+                               CornerRadius="16"
+                               Padding="14,10"
+                               HorizontalOptions="End"
+                               MaximumWidthRequest="400"
+                               HasShadow="False">
+                            <Label Text="{Binding Text}"
+                                   TextColor="{StaticResource UserMessageText}"
+                                   FontSize="14" />
+                        </Frame>
+
+                        <!-- Assistant text -->
+                        <Frame IsVisible="{Binding IsAssistant}"
+                               BackgroundColor="{StaticResource AssistantMessageBg}"
+                               BorderColor="Transparent"
+                               CornerRadius="16"
+                               Padding="14,10"
+                               HorizontalOptions="Start"
+                               MaximumWidthRequest="400"
+                               HasShadow="False">
+                            <Label Text="{Binding Text}"
+                                   TextColor="{StaticResource AssistantMessageText}"
+                                   FontSize="14" />
+                        </Frame>
+
+                    </VerticalStackLayout>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <!-- Suggestions + processing indicator -->
+        <VerticalStackLayout Grid.Row="1" Spacing="8" Padding="16,8">
+            <ActivityIndicator IsRunning="{Binding Session.IsProcessing}"
+                               IsVisible="{Binding Session.IsProcessing}"
+                               Color="{StaticResource Primary}"
+                               HeightRequest="24" />
+
+            <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
+                <HorizontalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding Suggestions}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="agentMaui:Suggestion">
+                            <Button Text="{Binding Text}"
+                                    Style="{StaticResource SuggestionButton}"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:BackendToolRenderingViewModel}}, Path=SendSuggestionCommand}"
+                                    CommandParameter="{Binding .}" />
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </HorizontalStackLayout>
+            </ScrollView>
+        </VerticalStackLayout>
+
+        <!-- Input area -->
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Padding="16,8,16,16" ColumnSpacing="8">
+            <Editor Grid.Column="0"
+                    Text="{Binding InputText}"
+                    Placeholder="Ask about the weather..."
+                    Style="{StaticResource ChatEditor}"
+                    HeightRequest="44"
+                    AutoSize="TextChanges"
+                    MaximumHeightRequest="120" />
+            <Button Grid.Column="1"
+                    Text="Send"
+                    Style="{StaticResource PrimaryButton}"
+                    Command="{Binding SendMessageCommand}"
+                    VerticalOptions="End" />
+        </Grid>
+    </Grid>
 </ContentPage>

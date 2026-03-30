@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="MauiDojo.Views.Templates.WeatherCardTemplate">
+
+    <Frame Style="{StaticResource CardFrame}"
+           Margin="0,4"
+           Padding="16"
+           MaximumWidthRequest="360"
+           HorizontalOptions="Start">
+        <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="8">
+
+            <!-- Location header -->
+            <Label Grid.Row="0"
+                   x:Name="LocationLabel"
+                   FontSize="16"
+                   FontAttributes="Bold"
+                   TextColor="{StaticResource TextPrimary}"
+                   Text="📍 Loading..." />
+
+            <!-- Loading state -->
+            <HorizontalStackLayout Grid.Row="1"
+                                   Spacing="8"
+                                   x:Name="LoadingPanel">
+                <ActivityIndicator IsRunning="True"
+                                   Color="{StaticResource Primary}"
+                                   HeightRequest="20"
+                                   WidthRequest="20" />
+                <Label Text="Fetching weather data..."
+                       FontSize="13"
+                       TextColor="{StaticResource TextSecondary}"
+                       VerticalOptions="Center" />
+            </HorizontalStackLayout>
+
+            <!-- Weather result -->
+            <VerticalStackLayout Grid.Row="2"
+                                 Spacing="8"
+                                 x:Name="ResultPanel"
+                                 IsVisible="False">
+                <!-- Temperature + icon -->
+                <HorizontalStackLayout Spacing="12">
+                    <Label x:Name="ConditionIconLabel"
+                           FontSize="48"
+                           VerticalOptions="Center" />
+                    <VerticalStackLayout VerticalOptions="Center">
+                        <Label x:Name="TemperatureLabel"
+                               FontSize="32"
+                               FontAttributes="Bold"
+                               TextColor="{StaticResource TextPrimary}" />
+                        <Label x:Name="ConditionsLabel"
+                               FontSize="14"
+                               TextColor="{StaticResource TextSecondary}" />
+                    </VerticalStackLayout>
+                </HorizontalStackLayout>
+
+                <!-- Details grid -->
+                <Grid ColumnDefinitions="*,*,*"
+                      RowDefinitions="Auto,Auto"
+                      RowSpacing="4"
+                      ColumnSpacing="8">
+                    <Label Grid.Row="0" Grid.Column="0"
+                           Text="💧 Humidity"
+                           FontSize="12"
+                           TextColor="{StaticResource TextSecondary}" />
+                    <Label Grid.Row="1" Grid.Column="0"
+                           x:Name="HumidityLabel"
+                           FontSize="14"
+                           FontAttributes="Bold"
+                           TextColor="{StaticResource TextPrimary}" />
+
+                    <Label Grid.Row="0" Grid.Column="1"
+                           Text="💨 Wind"
+                           FontSize="12"
+                           TextColor="{StaticResource TextSecondary}" />
+                    <Label Grid.Row="1" Grid.Column="1"
+                           x:Name="WindLabel"
+                           FontSize="14"
+                           FontAttributes="Bold"
+                           TextColor="{StaticResource TextPrimary}" />
+
+                    <Label Grid.Row="0" Grid.Column="2"
+                           Text="🌡️ Feels Like"
+                           FontSize="12"
+                           TextColor="{StaticResource TextSecondary}" />
+                    <Label Grid.Row="1" Grid.Column="2"
+                           x:Name="FeelsLikeLabel"
+                           FontSize="14"
+                           FontAttributes="Bold"
+                           TextColor="{StaticResource TextPrimary}" />
+                </Grid>
+            </VerticalStackLayout>
+        </Grid>
+    </Frame>
+</ContentView>

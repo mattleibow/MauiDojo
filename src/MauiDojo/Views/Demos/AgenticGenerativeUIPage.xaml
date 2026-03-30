@@ -1,10 +1,184 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:MauiDojo.ViewModels"
+             xmlns:models="clr-namespace:MauiDojo.Models"
+             xmlns:services="clr-namespace:MauiDojo.Agent.Maui.Services;assembly=MauiDojo.Agent.Maui"
+             xmlns:agentMaui="clr-namespace:MauiDojo.Agent.Maui;assembly=MauiDojo.Agent.Maui"
              x:Class="MauiDojo.Views.Demos.AgenticGenerativeUIPage"
+             x:DataType="vm:AgenticGenerativeUIViewModel"
              Title="Agentic Generative UI">
-    <VerticalStackLayout Padding="24" Spacing="16">
-        <Label Text="Agentic Generative UI" Style="{StaticResource PageTitle}" />
-        <Label Text="Demo coming soon..." TextColor="{StaticResource TextSecondary}" />
-    </VerticalStackLayout>
+
+    <Grid ColumnDefinitions="300,*" Padding="0">
+
+        <!-- Left panel: Task progress -->
+        <Frame Grid.Column="0"
+               BackgroundColor="{StaticResource BackgroundLight}"
+               BorderColor="{StaticResource BorderLight}"
+               CornerRadius="0"
+               Padding="0"
+               HasShadow="False">
+            <Grid RowDefinitions="Auto,*" Padding="16" RowSpacing="12">
+                <VerticalStackLayout Grid.Row="0" Spacing="4">
+                    <Label Text="📊 Task Progress"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="{StaticResource TextPrimary}" />
+                    <Label Text="Steps update in real-time as the agent works"
+                           FontSize="12"
+                           TextColor="{StaticResource TextSecondary}" />
+                </VerticalStackLayout>
+
+                <!-- No plan state -->
+                <VerticalStackLayout Grid.Row="1"
+                                     IsVisible="True"
+                                     VerticalOptions="Center"
+                                     HorizontalOptions="Center"
+                                     Spacing="8">
+                    <VerticalStackLayout.Triggers>
+                        <DataTrigger TargetType="VerticalStackLayout"
+                                     Binding="{Binding CurrentPlan}"
+                                     Value="{x:Null}">
+                            <Setter Property="IsVisible" Value="True" />
+                        </DataTrigger>
+                    </VerticalStackLayout.Triggers>
+                    <Label Text="🚀"
+                           FontSize="48"
+                           HorizontalOptions="Center" />
+                    <Label Text="Send a message to start a task"
+                           FontSize="14"
+                           TextColor="{StaticResource TextSecondary}"
+                           HorizontalOptions="Center" />
+                </VerticalStackLayout>
+
+                <!-- Plan steps list -->
+                <CollectionView Grid.Row="1"
+                                ItemsSource="{Binding CurrentPlan.Steps}">
+                    <CollectionView.Triggers>
+                        <DataTrigger TargetType="CollectionView"
+                                     Binding="{Binding CurrentPlan}"
+                                     Value="{x:Null}">
+                            <Setter Property="IsVisible" Value="False" />
+                        </DataTrigger>
+                    </CollectionView.Triggers>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:Step">
+                            <Frame BackgroundColor="{StaticResource BackgroundCard}"
+                                   BorderColor="{StaticResource BorderLight}"
+                                   CornerRadius="8"
+                                   Padding="12"
+                                   Margin="0,4"
+                                   HasShadow="False">
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                    <!-- Status indicator -->
+                                    <Label Grid.Column="0"
+                                           FontSize="20"
+                                           VerticalOptions="Center">
+                                        <Label.Triggers>
+                                            <DataTrigger TargetType="Label"
+                                                         Binding="{Binding Status}"
+                                                         Value="Pending">
+                                                <Setter Property="Text" Value="⏳" />
+                                            </DataTrigger>
+                                            <DataTrigger TargetType="Label"
+                                                         Binding="{Binding Status}"
+                                                         Value="Completed">
+                                                <Setter Property="Text" Value="✅" />
+                                            </DataTrigger>
+                                        </Label.Triggers>
+                                    </Label>
+
+                                    <Label Grid.Column="1"
+                                           Text="{Binding Description}"
+                                           FontSize="14"
+                                           TextColor="{StaticResource TextPrimary}"
+                                           VerticalOptions="Center"
+                                           LineBreakMode="WordWrap" />
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </Grid>
+        </Frame>
+
+        <!-- Right panel: Chat -->
+        <Grid Grid.Column="1" RowDefinitions="*,Auto,Auto" Padding="0">
+
+            <!-- Chat messages -->
+            <CollectionView Grid.Row="0"
+                            ItemsSource="{Binding Session.Messages}"
+                            Margin="0,8,0,0"
+                            ItemsUpdatingScrollMode="KeepLastItemInView">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="services:ChatMessageViewModel">
+                        <Grid Padding="16,4">
+                            <Frame IsVisible="{Binding IsUser}"
+                                   BackgroundColor="{StaticResource UserMessageBg}"
+                                   BorderColor="Transparent"
+                                   CornerRadius="16"
+                                   Padding="14,10"
+                                   HorizontalOptions="End"
+                                   MaximumWidthRequest="400"
+                                   HasShadow="False">
+                                <Label Text="{Binding Text}"
+                                       TextColor="{StaticResource UserMessageText}"
+                                       FontSize="14" />
+                            </Frame>
+
+                            <Frame IsVisible="{Binding IsAssistant}"
+                                   BackgroundColor="{StaticResource AssistantMessageBg}"
+                                   BorderColor="Transparent"
+                                   CornerRadius="16"
+                                   Padding="14,10"
+                                   HorizontalOptions="Start"
+                                   MaximumWidthRequest="400"
+                                   HasShadow="False">
+                                <Label Text="{Binding Text}"
+                                       TextColor="{StaticResource AssistantMessageText}"
+                                       FontSize="14" />
+                            </Frame>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <!-- Suggestions + processing indicator -->
+            <VerticalStackLayout Grid.Row="1" Spacing="8" Padding="16,8">
+                <ActivityIndicator IsRunning="{Binding Session.IsProcessing}"
+                                   IsVisible="{Binding Session.IsProcessing}"
+                                   Color="{StaticResource Primary}"
+                                   HeightRequest="24" />
+
+                <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
+                    <HorizontalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding Suggestions}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="agentMaui:Suggestion">
+                                <Button Text="{Binding Text}"
+                                        Style="{StaticResource SuggestionButton}"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:AgenticGenerativeUIViewModel}}, Path=SendSuggestionCommand}"
+                                        CommandParameter="{Binding .}" />
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </HorizontalStackLayout>
+                </ScrollView>
+            </VerticalStackLayout>
+
+            <!-- Input area -->
+            <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Padding="16,8,16,16" ColumnSpacing="8">
+                <Editor Grid.Column="0"
+                        Text="{Binding InputText}"
+                        Placeholder="Describe a task..."
+                        Style="{StaticResource ChatEditor}"
+                        HeightRequest="44"
+                        AutoSize="TextChanges"
+                        MaximumHeightRequest="120" />
+                <Button Grid.Column="1"
+                        Text="Send"
+                        Style="{StaticResource PrimaryButton}"
+                        Command="{Binding SendMessageCommand}"
+                        VerticalOptions="End" />
+            </Grid>
+        </Grid>
+    </Grid>
 </ContentPage>
