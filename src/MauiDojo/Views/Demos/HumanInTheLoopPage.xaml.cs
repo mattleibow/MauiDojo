@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
 
+using System.Collections.Specialized;
 using MauiDojo.ViewModels;
 using Microsoft.Extensions.AI;
 
@@ -24,6 +25,37 @@ public partial class HumanInTheLoopPage : ContentPage
         {
             System.Diagnostics.Debug.WriteLine($"HumanInTheLoopPage: {ex.Message}");
         }
+    }
+
+    protected override void OnBindingContextChanged()
+    {
+        base.OnBindingContextChanged();
+
+        if (BindingContext is HumanInTheLoopViewModel vm)
+        {
+            // Toggle empty view based on message count
+            vm.Session.Messages.CollectionChanged += OnMessagesChanged;
+            vm.Session.PendingMessages.CollectionChanged += OnMessagesChanged;
+            UpdateEmptyView(vm);
+        }
+    }
+
+    private void OnMessagesChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (BindingContext is HumanInTheLoopViewModel vm)
+        {
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                UpdateEmptyView(vm);
+                // Auto-scroll to bottom
+                MessagesScrollView.ScrollToAsync(0, MessagesScrollView.ContentSize.Height, true);
+            });
+        }
+    }
+
+    private void UpdateEmptyView(HumanInTheLoopViewModel vm)
+    {
+        EmptyView.IsVisible = vm.Session.Messages.Count == 0 && vm.Session.PendingMessages.Count == 0;
     }
 
     private async void OnSendClicked(object? sender, EventArgs e)

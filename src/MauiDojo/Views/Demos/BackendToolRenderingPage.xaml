@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              xmlns:local="clr-namespace:MauiDojo.Converters"
+             xmlns:templates="clr-namespace:MauiDojo.Views.Templates"
              x:Class="MauiDojo.Views.Demos.BackendToolRenderingPage"
              Title="Backend Tool Rendering">
 
@@ -10,82 +11,57 @@
         <toolkit:InvertedBoolConverter x:Key="InverseBoolConverter" />
         <local:BoolToColorConverter x:Key="BoolToColorConverter" />
         <local:BoolToTextColorConverter x:Key="BoolToTextColorConverter" />
+
+        <!-- User message bubble -->
+        <DataTemplate x:Key="UserMessageTemplate">
+            <Frame Margin="4,2" Padding="12,8" CornerRadius="12" HasShadow="False"
+                   BackgroundColor="{Binding IsUser, Converter={StaticResource BoolToColorConverter}}">
+                <Label Text="{Binding Text}"
+                       TextColor="{Binding IsUser, Converter={StaticResource BoolToTextColorConverter}}" />
+            </Frame>
+        </DataTemplate>
+
+        <!-- Assistant text bubble -->
+        <DataTemplate x:Key="AssistantTextTemplate">
+            <Frame Margin="4,2" Padding="12,8" CornerRadius="12" HasShadow="False"
+                   BackgroundColor="#F3F4F6">
+                <Label Text="{Binding Text}" TextColor="#212121" />
+            </Frame>
+        </DataTemplate>
+
+        <!-- Inline weather card (rendered inside the message list) -->
+        <DataTemplate x:Key="WeatherCardTemplate">
+            <templates:InlineWeatherCardView />
+        </DataTemplate>
+
+        <!-- Default: minimal view for messages with no displayable content -->
+        <DataTemplate x:Key="DefaultMessageTemplate">
+            <ContentView />
+        </DataTemplate>
+
+        <templates:ChatMessageTemplateSelector x:Key="MessageTemplateSelector"
+            UserMessageTemplate="{StaticResource UserMessageTemplate}"
+            AssistantTextTemplate="{StaticResource AssistantTextTemplate}"
+            WeatherCardTemplate="{StaticResource WeatherCardTemplate}"
+            DefaultTemplate="{StaticResource DefaultMessageTemplate}" />
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="Auto,*,Auto,Auto">
+    <Grid RowDefinitions="*,Auto,Auto">
 
-        <!-- Weather Card (appears when weather data is available) -->
-        <Frame Grid.Row="0" IsVisible="{Binding ShowWeatherCard}"
-               Margin="8" Padding="16" CornerRadius="12" HasShadow="True"
-               BackgroundColor="#FEF3C7" BorderColor="#F59E0B">
-            <Grid>
-                <!-- Loading skeleton -->
-                <VerticalStackLayout Spacing="8"
-                                     IsVisible="{Binding HasWeather, Converter={StaticResource InverseBoolConverter}}">
-                    <HorizontalStackLayout Spacing="8">
-                        <ActivityIndicator IsRunning="True" Color="#F59E0B"
-                                           HeightRequest="20" WidthRequest="20" />
-                        <Label Text="Fetching weather data..." FontSize="13"
-                               TextColor="#92400E" VerticalOptions="Center" />
-                    </HorizontalStackLayout>
-                </VerticalStackLayout>
-                <!-- Weather data -->
-                <VerticalStackLayout Spacing="8"
-                                     IsVisible="{Binding HasWeather}">
-                <HorizontalStackLayout Spacing="8">
-                    <Label Text="{Binding CurrentWeather.ConditionIcon}" FontSize="40" VerticalOptions="Center" />
-                    <VerticalStackLayout>
-                        <Label Text="{Binding WeatherLocation}" FontSize="18" FontAttributes="Bold" />
-                        <Label Text="Current Weather" FontSize="12" TextColor="#757575" />
-                    </VerticalStackLayout>
-                </HorizontalStackLayout>
-                <HorizontalStackLayout Spacing="4">
-                    <Label Text="{Binding CurrentWeather.Temperature, StringFormat='{0}°C'}"
-                           FontSize="28" FontAttributes="Bold" />
-                    <Label Text="{Binding CurrentWeather.TemperatureFahrenheit, StringFormat='/ {0:F0}°F'}"
-                           FontSize="16" TextColor="#757575" VerticalOptions="End" Margin="0,0,0,4" />
-                </HorizontalStackLayout>
-                <Label Text="{Binding CurrentWeather.Conditions}" FontSize="14" TextColor="#757575" />
-                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
-                    <VerticalStackLayout>
-                        <Label Text="Humidity" FontSize="11" TextColor="#9CA3AF" />
-                        <Label Text="{Binding CurrentWeather.Humidity, StringFormat='{0}%'}" FontAttributes="Bold" />
-                    </VerticalStackLayout>
-                    <VerticalStackLayout Grid.Column="1">
-                        <Label Text="Wind" FontSize="11" TextColor="#9CA3AF" />
-                        <Label Text="{Binding CurrentWeather.WindSpeed, StringFormat='{0} km/h'}" FontAttributes="Bold" />
-                    </VerticalStackLayout>
-                    <VerticalStackLayout Grid.Column="2">
-                        <Label Text="Feels Like" FontSize="11" TextColor="#9CA3AF" />
-                        <Label Text="{Binding CurrentWeather.FeelsLike, StringFormat='{0}°C'}" FontAttributes="Bold" />
-                    </VerticalStackLayout>
-                </Grid>
-                </VerticalStackLayout>
-            </Grid>
-        </Frame>
-
-        <!-- Messages list -->
-        <CollectionView Grid.Row="1" x:Name="MessagesView" Margin="8"
-                        ItemsSource="{Binding Session.Messages}" SelectionMode="None">
+        <!-- Messages list with inline weather cards -->
+        <CollectionView Grid.Row="0" x:Name="MessagesView" Margin="8"
+                        ItemsSource="{Binding Session.Messages}" SelectionMode="None"
+                        ItemTemplate="{StaticResource MessageTemplateSelector}">
             <CollectionView.EmptyView>
                 <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="8">
                     <Label Text="🌤️" FontSize="48" HorizontalOptions="Center" />
                     <Label Text="Ask about the weather" FontSize="16" TextColor="Gray" HorizontalOptions="Center" />
                 </VerticalStackLayout>
             </CollectionView.EmptyView>
-            <CollectionView.ItemTemplate>
-                <DataTemplate>
-                    <Frame Margin="4,2" Padding="12,8" CornerRadius="12" HasShadow="False"
-                           BackgroundColor="{Binding IsUser, Converter={StaticResource BoolToColorConverter}}">
-                        <Label Text="{Binding Text}"
-                               TextColor="{Binding IsUser, Converter={StaticResource BoolToTextColorConverter}}" />
-                    </Frame>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
         </CollectionView>
 
         <!-- Suggestions -->
-        <HorizontalStackLayout Grid.Row="2" Spacing="8" Margin="8,4"
+        <HorizontalStackLayout Grid.Row="1" Spacing="8" Margin="8,4"
                                IsVisible="{Binding Session.IsProcessing, Converter={StaticResource InverseBoolConverter}}">
             <Button Text="Weather in San Francisco" Clicked="OnSuggestionClicked"
                     FontSize="12" Padding="12,6" CornerRadius="16"
@@ -99,7 +75,7 @@
         </HorizontalStackLayout>
 
         <!-- Input area -->
-        <Grid Grid.Row="3" ColumnDefinitions="*,Auto" Margin="8" ColumnSpacing="8">
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="8" ColumnSpacing="8">
             <Entry x:Name="InputEntry" Placeholder="Ask about the weather..."
                    IsEnabled="{Binding Session.IsProcessing, Converter={StaticResource InverseBoolConverter}}" />
             <Button Grid.Column="1" Text="Send" Clicked="OnSendClicked"

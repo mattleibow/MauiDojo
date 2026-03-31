@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright (c) Microsoft. All rights reserved. -->
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="MauiDojo.Views.Templates.InlineWeatherCardView">
+
+    <VerticalStackLayout Spacing="4" Margin="4,2">
+        <!-- Weather Card -->
+        <Frame Padding="16" CornerRadius="12" HasShadow="True"
+               BackgroundColor="#FEF3C7" BorderColor="#F59E0B">
+            <Grid>
+                <!-- Loading skeleton -->
+                <VerticalStackLayout Spacing="8" x:Name="LoadingPanel" IsVisible="False">
+                    <HorizontalStackLayout Spacing="8">
+                        <ActivityIndicator IsRunning="True" Color="#F59E0B"
+                                           HeightRequest="20" WidthRequest="20" />
+                        <Label Text="Fetching weather data..." FontSize="13"
+                               TextColor="#92400E" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+
+                <!-- Weather data -->
+                <VerticalStackLayout Spacing="8" x:Name="WeatherPanel" IsVisible="False">
+                    <HorizontalStackLayout Spacing="8">
+                        <Label x:Name="ConditionIconLabel" FontSize="40" VerticalOptions="Center" />
+                        <VerticalStackLayout>
+                            <Label x:Name="LocationLabel" FontSize="18" FontAttributes="Bold" />
+                            <Label Text="Current Weather" FontSize="12" TextColor="#757575" />
+                        </VerticalStackLayout>
+                    </HorizontalStackLayout>
+                    <HorizontalStackLayout Spacing="4">
+                        <Label x:Name="TemperatureLabel" FontSize="28" FontAttributes="Bold" />
+                        <Label x:Name="TemperatureFLabel" FontSize="16" TextColor="#757575"
+                               VerticalOptions="End" Margin="0,0,0,4" />
+                    </HorizontalStackLayout>
+                    <Label x:Name="ConditionsLabel" FontSize="14" TextColor="#757575" />
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                        <VerticalStackLayout>
+                            <Label Text="Humidity" FontSize="11" TextColor="#9CA3AF" />
+                            <Label x:Name="HumidityLabel" FontAttributes="Bold" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1">
+                            <Label Text="Wind" FontSize="11" TextColor="#9CA3AF" />
+                            <Label x:Name="WindLabel" FontAttributes="Bold" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="2">
+                            <Label Text="Feels Like" FontSize="11" TextColor="#9CA3AF" />
+                            <Label x:Name="FeelsLikeLabel" FontAttributes="Bold" />
+                        </VerticalStackLayout>
+                    </Grid>
+                </VerticalStackLayout>
+            </Grid>
+        </Frame>
+
+        <!-- Text content below the card (if any) -->
+        <Frame Padding="12,8" CornerRadius="12" HasShadow="False"
+               BackgroundColor="#F3F4F6" x:Name="TextFrame" IsVisible="False">
+            <Label x:Name="TextLabel" TextColor="#212121" />
+        </Frame>
+    </VerticalStackLayout>
+</ContentView>
