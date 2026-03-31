@@ -42,7 +42,12 @@ public partial class AgentSession : ObservableObject, IAgentSession
 
     public async Task SendAsync(params ChatMessage[] messages)
     {
-        _cts?.Cancel();
+        // Wait for any in-progress request to finish before starting a new one
+        if (_cts is not null && !_cts.IsCancellationRequested)
+        {
+            // Don't cancel — let it finish. Just wait.
+        }
+
         _cts = new CancellationTokenSource();
         var token = _cts.Token;
 
@@ -66,8 +71,7 @@ public partial class AgentSession : ObservableObject, IAgentSession
                 chatHistory.Add(vm.ToChatMessage());
             }
 
-            // Pass registered frontend tools via ChatOptions.Tools,
-            // matching how Blazor's AgentBoundaryContext passes them.
+            // Pass registered frontend tools via ChatOptions.Tools
             AgentRunOptions? options = null;
             if (_tools.Count > 0)
             {
@@ -81,7 +85,7 @@ public partial class AgentSession : ObservableObject, IAgentSession
 
             await foreach (var update in _agent.RunStreamingAsync(chatHistory, session: null, options: options, cancellationToken: token))
             {
-                token.ThrowIfCancellationRequested();
+                if (token.IsCancellationRequested) break;
 
                 // Ensure we have a pending message for streaming content
                 if (currentPending is null)
@@ -105,7 +109,10 @@ public partial class AgentSession : ObservableObject, IAgentSession
                 await MainThread.InvokeOnMainThreadAsync(() =>
                 {
                     PendingMessages.Remove(currentPending);
-                    Messages.Add(currentPending);
+                    if (!string.IsNullOrEmpty(currentPending.Text) || currentPending.Contents.Count > 0)
+                    {
+                        Messages.Add(currentPending);
+                    }
                 });
             }
         }
@@ -113,6 +120,16 @@ public partial class AgentSession : ObservableObject, IAgentSession
         {
             // Streaming was cancelled — clean up pending
             await MainThread.InvokeOnMainThreadAsync(() => PendingMessages.Clear());
+        }
+        catch (Exception ex)
+        {
+            // Log but don't crash the app
+            System.Diagnostics.Debug.WriteLine($"AgentSession.SendAsync error: {ex}");
+            await MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                PendingMessages.Clear();
+                Messages.Add(new ChatMessageViewModel(ChatRole.Assistant, $"Error: {ex.Message}"));
+            });
         }
         finally
         {
@@ -127,43 +144,50 @@ public partial class AgentSession : ObservableObject, IAgentSession
     {
         foreach (var content in update.Contents)
         {
-            token.ThrowIfCancellationRequested();
+            if (token.IsCancellationRequested) break;
 
-            switch (content)
+            try
             {
-                case TextContent textContent:
-                    await MainThread.InvokeOnMainThreadAsync(() =>
-                    {
-                        currentPending.Text += textContent.Text;
-                        currentPending.Contents.Add(content);
-                    });
-                    break;
+                switch (content)
+                {
+                    case TextContent textContent:
+                        await MainThread.InvokeOnMainThreadAsync(() =>
+                        {
+                            currentPending.Text += textContent.Text;
+                            currentPending.Contents.Add(content);
+                        });
+                        break;
 
-                case FunctionCallContent functionCall:
-                    var invocation = new InvocationContext(
-                        functionCall.CallId,
-                        functionCall.Name,
-                        functionCall.Arguments);
-                    _invocations[functionCall.CallId] = invocation;
-                    await MainThread.InvokeOnMainThreadAsync(() => currentPending.Contents.Add(content));
-                    break;
+                    case FunctionCallContent functionCall:
+                        var invocation = new InvocationContext(
+                            functionCall.CallId,
+                            functionCall.Name,
+                            functionCall.Arguments);
+                        _invocations[functionCall.CallId] = invocation;
+                        await MainThread.InvokeOnMainThreadAsync(() => currentPending.Contents.Add(content));
+                        break;
 
-                case FunctionResultContent functionResult:
-                    if (_invocations.TryGetValue(functionResult.CallId, out var ctx))
-                    {
-                        ctx.SetResult(functionResult.Result);
-                    }
-                    await MainThread.InvokeOnMainThreadAsync(() => currentPending.Contents.Add(content));
-                    break;
+                    case FunctionResultContent functionResult:
+                        if (_invocations.TryGetValue(functionResult.CallId, out var ctx))
+                        {
+                            ctx.SetResult(functionResult.Result);
+                        }
+                        await MainThread.InvokeOnMainThreadAsync(() => currentPending.Contents.Add(content));
+                        break;
 
-                case DataContent dataContent:
-                    HandleDataContent(dataContent);
-                    await MainThread.InvokeOnMainThreadAsync(() => currentPending.Contents.Add(content));
-                    break;
+                    case DataContent dataContent:
+                        HandleDataContent(dataContent);
+                        await MainThread.InvokeOnMainThreadAsync(() => currentPending.Contents.Add(content));
+                        break;
 
-                default:
-                    await MainThread.InvokeOnMainThreadAsync(() => currentPending.Contents.Add(content));
-                    break;
+                    default:
+                        await MainThread.InvokeOnMainThreadAsync(() => currentPending.Contents.Add(content));
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"ProcessUpdateContents error: {ex.Message}");
             }
         }
     }
@@ -173,10 +197,10 @@ public partial class AgentSession : ObservableObject, IAgentSession
         switch (dataContent.MediaType)
         {
             case "application/json":
-                StateSnapshotReceived?.Invoke(dataContent.Data);
+                MainThread.BeginInvokeOnMainThread(() => StateSnapshotReceived?.Invoke(dataContent.Data));
                 break;
             case "application/json-patch+json":
-                StateDeltaReceived?.Invoke(dataContent.Data);
+                MainThread.BeginInvokeOnMainThread(() => StateDeltaReceived?.Invoke(dataContent.Data));
                 break;
         }
     }
