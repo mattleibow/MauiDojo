@@ -7,6 +7,12 @@ namespace MauiDojo.Views.Demos;
 
 public partial class HumanInTheLoopPage : ContentPage
 {
+    private static readonly Dictionary<string, string> SuggestionMessages = new()
+    {
+        ["Simple plan"] = "Create a simple 5-step plan for organizing a birthday party",
+        ["Complex plan"] = "Create a detailed 10-step plan for launching a new product",
+    };
+
     public HumanInTheLoopPage()
     {
         InitializeComponent();
@@ -34,13 +40,7 @@ public partial class HumanInTheLoopPage : ContentPage
     {
         var session = (BindingContext as dynamic)?.Session as MauiDojo.Agent.Maui.Services.IAgentSession;
         if (session is null || sender is not Button btn) return;
-        var text = btn.Text;
-        // Strip leading emoji + space
-        if (text.Length > 2 && (char.IsHighSurrogate(text[0]) || text[0] > 127))
-        {
-            var spaceIdx = text.IndexOf(' ');
-            if (spaceIdx > 0 && spaceIdx < 4) text = text[(spaceIdx + 1)..];
-        }
-        await session.SendAsync(new ChatMessage(ChatRole.User, text));
+        if (SuggestionMessages.TryGetValue(btn.Text, out var message))
+            await session.SendAsync(new ChatMessage(ChatRole.User, message));
     }
 }

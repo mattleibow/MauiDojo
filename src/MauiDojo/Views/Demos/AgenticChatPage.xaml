@@ -41,17 +41,19 @@
         <!-- Suggestions -->
         <HorizontalStackLayout Grid.Row="1" Spacing="8" Margin="8,4"
                                IsVisible="{Binding Session.IsProcessing, Converter={StaticResource InverseBoolConverter}}">
-            <Button Text="💡 Change background" Clicked="OnSuggestionClicked"
+            <Button Text="Change background" AutomationId="SuggestChangeBackground"
+                    Clicked="OnSuggestionClicked"
                     FontSize="12" Padding="12,6" CornerRadius="16"
                     BackgroundColor="#F3F4F6" TextColor="#6366F1" />
-            <Button Text="✍️ Generate a sonnet" Clicked="OnSuggestionClicked"
+            <Button Text="Generate sonnet" AutomationId="SuggestSonnet"
+                    Clicked="OnSuggestionClicked"
                     FontSize="12" Padding="12,6" CornerRadius="16"
                     BackgroundColor="#F3F4F6" TextColor="#6366F1" />
         </HorizontalStackLayout>
 
         <!-- Input area -->
         <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="8" ColumnSpacing="8">
-            <Entry x:Name="InputEntry" Placeholder="Type a message..."
+            <Entry x:Name="InputEntry" Placeholder="Type your message..."
                    IsEnabled="{Binding Session.IsProcessing, Converter={StaticResource InverseBoolConverter}}" />
             <Button Grid.Column="1" Text="Send" Clicked="OnSendClicked"
                     BackgroundColor="#6366F1" TextColor="White" CornerRadius="8" />

@@ -22,20 +22,27 @@ public partial class BackendToolRenderingViewModel : ObservableObject, IDisposab
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasWeather))]
+    [NotifyPropertyChangedFor(nameof(ShowWeatherCard))]
     private WeatherInfo? _currentWeather;
 
     [ObservableProperty]
     private string _weatherLocation = string.Empty;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowWeatherCard))]
+    private bool _isWeatherLoading;
+
     public bool HasWeather => CurrentWeather is not null;
+
+    public bool ShowWeatherCard => HasWeather || IsWeatherLoading;
 
     public IAgentSession Session { get; }
 
     public ObservableCollection<Suggestion> Suggestions { get; } =
     [
+        new("Weather in San Francisco", "What's the weather like in San Francisco?"),
+        new("Weather in New York", "What's the weather like in New York?"),
         new("Weather in Tokyo", "What's the weather like in Tokyo?"),
-        new("Weather in New York", "What's the weather in New York right now?"),
-        new("Weather in London", "Tell me the current weather in London"),
     ];
 
     public BackendToolRenderingViewModel(
@@ -57,6 +64,12 @@ public partial class BackendToolRenderingViewModel : ObservableObject, IDisposab
         foreach (var msg in Session.Messages)
         {
             ScanForWeatherResult(msg);
+        }
+
+        // Clear loading state when processing completes
+        if (!Session.IsProcessing)
+        {
+            MainThread.BeginInvokeOnMainThread(() => IsWeatherLoading = false);
         }
     }
 
@@ -87,6 +100,7 @@ public partial class BackendToolRenderingViewModel : ObservableObject, IDisposab
             {
                 WeatherLocation = location ?? "Unknown";
                 CurrentWeather = weather;
+                IsWeatherLoading = false;
             });
         }
     }

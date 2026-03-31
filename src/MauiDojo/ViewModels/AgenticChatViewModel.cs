@@ -28,8 +28,8 @@ public partial class AgenticChatViewModel : ObservableObject, IDisposable
 
     public ObservableCollection<Suggestion> Suggestions { get; } =
     [
-        new("Change background to light blue", "Change the background color to light blue"),
-        new("Generate a sonnet", "Write me a beautiful sonnet about the ocean"),
+        new("Change background", "Change background to light blue"),
+        new("Generate sonnet", "Generate sonnet"),
     ];
 
     public AgenticChatViewModel(

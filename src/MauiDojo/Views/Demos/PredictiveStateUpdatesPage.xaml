@@ -12,44 +12,105 @@
         <local:BoolToTextColorConverter x:Key="BoolToTextColorConverter" />
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="*,Auto,Auto">
-        <CollectionView Grid.Row="0" x:Name="MessagesView" Margin="8"
-                        ItemsSource="{Binding Session.Messages}" SelectionMode="None">
-            <CollectionView.EmptyView>
-                <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="8">
-                    <Label Text="🥋" FontSize="48" HorizontalOptions="Center" />
-                    <Label Text="Predictive State Updates" FontSize="16" TextColor="Gray" HorizontalOptions="Center" />
+    <Grid ColumnDefinitions="*,*" ColumnSpacing="0">
+
+        <!-- LEFT: Document Editor -->
+        <Grid Grid.Column="0" RowDefinitions="Auto,*" BackgroundColor="#FAFAFA">
+
+            <!-- Header -->
+            <HorizontalStackLayout Grid.Row="0" Spacing="8" Padding="16,12"
+                                   BackgroundColor="White">
+                <Label Text="📝 Document Editor" FontSize="18" FontAttributes="Bold"
+                       TextColor="#1F2937" VerticalOptions="Center" />
+                <Label Text="✍️ Writing..." FontSize="14" TextColor="#6366F1"
+                       VerticalOptions="Center"
+                       IsVisible="{Binding IsStreaming}" />
+            </HorizontalStackLayout>
+
+            <!-- Document Content -->
+            <Grid Grid.Row="1">
+                <!-- Document text -->
+                <ScrollView Padding="16" IsVisible="{Binding HasDocument}">
+                    <Label Text="{Binding CurrentDocument.Document}" FontSize="14"
+                           TextColor="#374151" LineBreakMode="WordWrap" />
+                </ScrollView>
+
+                <!-- Empty placeholder -->
+                <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center"
+                                     Spacing="12" Padding="24"
+                                     IsVisible="{Binding HasDocument, Converter={StaticResource InverseBoolConverter}}">
+                    <Label Text="📄" FontSize="48" HorizontalOptions="Center" />
+                    <Label Text="Write whatever you want here in Markdown format..."
+                           FontSize="14" TextColor="Gray" HorizontalOptions="Center"
+                           HorizontalTextAlignment="Center" />
                 </VerticalStackLayout>
-            </CollectionView.EmptyView>
-            <CollectionView.ItemTemplate>
-                <DataTemplate>
-                    <Frame Margin="4,2" Padding="12,8" CornerRadius="12" HasShadow="False"
-                           BackgroundColor="{Binding IsUser, Converter={StaticResource BoolToColorConverter}}">
-                        <Label Text="{Binding Text}"
-                               TextColor="{Binding IsUser, Converter={StaticResource BoolToTextColorConverter}}" />
-                    </Frame>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
 
-        <HorizontalStackLayout Grid.Row="1" Spacing="8" Margin="8,4"
-                               IsVisible="{Binding Session.IsProcessing, Converter={StaticResource InverseBoolConverter}}">
-            <Button Text="🏴‍☠️ Write a pirate story" Clicked="OnSuggestionClicked"
-                    FontSize="12" Padding="12,6" CornerRadius="16"
-                    BackgroundColor="#F3F4F6" TextColor="#6366F1" />
-            <Button Text="🚀 A space adventure" Clicked="OnSuggestionClicked"
-                    FontSize="12" Padding="12,6" CornerRadius="16"
-                    BackgroundColor="#F3F4F6" TextColor="#6366F1" />
-            <Button Text="🐉 A dragon tale" Clicked="OnSuggestionClicked"
-                    FontSize="12" Padding="12,6" CornerRadius="16"
-                    BackgroundColor="#F3F4F6" TextColor="#6366F1" />
-        </HorizontalStackLayout>
+                <!-- Confirmation Overlay -->
+                <Frame IsVisible="{Binding IsAwaitingConfirmation}"
+                       BackgroundColor="#FFFFFFEE" Padding="24" CornerRadius="16"
+                       HasShadow="True" HorizontalOptions="Center" VerticalOptions="Center"
+                       BorderColor="#E5E7EB">
+                    <VerticalStackLayout Spacing="16" HorizontalOptions="Center">
+                        <Label Text="Confirm Changes" FontSize="20" FontAttributes="Bold"
+                               TextColor="#1F2937" HorizontalTextAlignment="Center" />
+                        <Label Text="Do you want to accept the changes?"
+                               FontSize="14" TextColor="#6B7280" HorizontalTextAlignment="Center" />
+                        <HorizontalStackLayout Spacing="12" HorizontalOptions="Center">
+                            <Button Text="Reject" Command="{Binding RejectChangesCommand}"
+                                    BackgroundColor="#EF4444" TextColor="White"
+                                    CornerRadius="8" Padding="20,10" FontSize="14" />
+                            <Button Text="Confirm" Command="{Binding AcceptChangesCommand}"
+                                    BackgroundColor="#22C55E" TextColor="White"
+                                    CornerRadius="8" Padding="20,10" FontSize="14" />
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </Frame>
+            </Grid>
+        </Grid>
 
-        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="8" ColumnSpacing="8">
-            <Entry x:Name="InputEntry" Placeholder="Type a message..."
-                   IsEnabled="{Binding Session.IsProcessing, Converter={StaticResource InverseBoolConverter}}" />
-            <Button Grid.Column="1" Text="Send" Clicked="OnSendClicked"
-                    BackgroundColor="#6366F1" TextColor="White" CornerRadius="8" />
+        <!-- RIGHT: Chat Panel -->
+        <Grid Grid.Column="1" RowDefinitions="*,Auto,Auto" BackgroundColor="White">
+            <CollectionView Grid.Row="0" x:Name="MessagesView" Margin="8"
+                            ItemsSource="{Binding Session.Messages}" SelectionMode="None">
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="8">
+                        <Label Text="🥋" FontSize="48" HorizontalOptions="Center" />
+                        <Label Text="Predictive State Updates" FontSize="16" TextColor="Gray" HorizontalOptions="Center" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Frame Margin="4,2" Padding="12,8" CornerRadius="12" HasShadow="False"
+                               BackgroundColor="{Binding IsUser, Converter={StaticResource BoolToColorConverter}}">
+                            <Label Text="{Binding Text}"
+                                   TextColor="{Binding IsUser, Converter={StaticResource BoolToTextColorConverter}}" />
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <HorizontalStackLayout Grid.Row="1" Spacing="8" Margin="8,4"
+                                   IsVisible="{Binding Session.IsProcessing, Converter={StaticResource InverseBoolConverter}}">
+                <Button Text="Write a pirate story" Clicked="OnSuggestionClicked"
+                        AutomationId="Please write a story about a pirate named Candy Beard"
+                        FontSize="12" Padding="12,6" CornerRadius="16"
+                        BackgroundColor="#F3F4F6" TextColor="#6366F1" />
+                <Button Text="Write a mermaid story" Clicked="OnSuggestionClicked"
+                        AutomationId="Please write a story about a mermaid named Pearl"
+                        FontSize="12" Padding="12,6" CornerRadius="16"
+                        BackgroundColor="#F3F4F6" TextColor="#6366F1" />
+                <Button Text="Add character" Clicked="OnSuggestionClicked"
+                        AutomationId="Add a new character to the story"
+                        FontSize="12" Padding="12,6" CornerRadius="16"
+                        BackgroundColor="#F3F4F6" TextColor="#6366F1" />
+            </HorizontalStackLayout>
+
+            <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="8" ColumnSpacing="8">
+                <Entry x:Name="InputEntry" Placeholder="Ask the AI to write or edit..."
+                       IsEnabled="{Binding Session.IsProcessing, Converter={StaticResource InverseBoolConverter}}" />
+                <Button Grid.Column="1" Text="Send" Clicked="OnSendClicked"
+                        BackgroundColor="#6366F1" TextColor="White" CornerRadius="8" />
+            </Grid>
         </Grid>
     </Grid>
 </ContentPage>

@@ -12,13 +12,65 @@
         <local:BoolToTextColorConverter x:Key="BoolToTextColorConverter" />
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="*,Auto,Auto">
-        <CollectionView Grid.Row="0" x:Name="MessagesView" Margin="8"
+    <Grid RowDefinitions="Auto,*,Auto,Auto">
+
+        <!-- Weather Card (appears when weather data is available) -->
+        <Frame Grid.Row="0" IsVisible="{Binding ShowWeatherCard}"
+               Margin="8" Padding="16" CornerRadius="12" HasShadow="True"
+               BackgroundColor="#FEF3C7" BorderColor="#F59E0B">
+            <Grid>
+                <!-- Loading skeleton -->
+                <VerticalStackLayout Spacing="8"
+                                     IsVisible="{Binding HasWeather, Converter={StaticResource InverseBoolConverter}}">
+                    <HorizontalStackLayout Spacing="8">
+                        <ActivityIndicator IsRunning="True" Color="#F59E0B"
+                                           HeightRequest="20" WidthRequest="20" />
+                        <Label Text="Fetching weather data..." FontSize="13"
+                               TextColor="#92400E" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+                <!-- Weather data -->
+                <VerticalStackLayout Spacing="8"
+                                     IsVisible="{Binding HasWeather}">
+                <HorizontalStackLayout Spacing="8">
+                    <Label Text="{Binding CurrentWeather.ConditionIcon}" FontSize="40" VerticalOptions="Center" />
+                    <VerticalStackLayout>
+                        <Label Text="{Binding WeatherLocation}" FontSize="18" FontAttributes="Bold" />
+                        <Label Text="Current Weather" FontSize="12" TextColor="#757575" />
+                    </VerticalStackLayout>
+                </HorizontalStackLayout>
+                <HorizontalStackLayout Spacing="4">
+                    <Label Text="{Binding CurrentWeather.Temperature, StringFormat='{0}°C'}"
+                           FontSize="28" FontAttributes="Bold" />
+                    <Label Text="{Binding CurrentWeather.TemperatureFahrenheit, StringFormat='/ {0:F0}°F'}"
+                           FontSize="16" TextColor="#757575" VerticalOptions="End" Margin="0,0,0,4" />
+                </HorizontalStackLayout>
+                <Label Text="{Binding CurrentWeather.Conditions}" FontSize="14" TextColor="#757575" />
+                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                    <VerticalStackLayout>
+                        <Label Text="Humidity" FontSize="11" TextColor="#9CA3AF" />
+                        <Label Text="{Binding CurrentWeather.Humidity, StringFormat='{0}%'}" FontAttributes="Bold" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Grid.Column="1">
+                        <Label Text="Wind" FontSize="11" TextColor="#9CA3AF" />
+                        <Label Text="{Binding CurrentWeather.WindSpeed, StringFormat='{0} km/h'}" FontAttributes="Bold" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Grid.Column="2">
+                        <Label Text="Feels Like" FontSize="11" TextColor="#9CA3AF" />
+                        <Label Text="{Binding CurrentWeather.FeelsLike, StringFormat='{0}°C'}" FontAttributes="Bold" />
+                    </VerticalStackLayout>
+                </Grid>
+                </VerticalStackLayout>
+            </Grid>
+        </Frame>
+
+        <!-- Messages list -->
+        <CollectionView Grid.Row="1" x:Name="MessagesView" Margin="8"
                         ItemsSource="{Binding Session.Messages}" SelectionMode="None">
             <CollectionView.EmptyView>
                 <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="8">
-                    <Label Text="🥋" FontSize="48" HorizontalOptions="Center" />
-                    <Label Text="Backend Tool Rendering" FontSize="16" TextColor="Gray" HorizontalOptions="Center" />
+                    <Label Text="🌤️" FontSize="48" HorizontalOptions="Center" />
+                    <Label Text="Ask about the weather" FontSize="16" TextColor="Gray" HorizontalOptions="Center" />
                 </VerticalStackLayout>
             </CollectionView.EmptyView>
             <CollectionView.ItemTemplate>
@@ -32,21 +84,23 @@
             </CollectionView.ItemTemplate>
         </CollectionView>
 
-        <HorizontalStackLayout Grid.Row="1" Spacing="8" Margin="8,4"
+        <!-- Suggestions -->
+        <HorizontalStackLayout Grid.Row="2" Spacing="8" Margin="8,4"
                                IsVisible="{Binding Session.IsProcessing, Converter={StaticResource InverseBoolConverter}}">
-            <Button Text="🌤️ Weather in San Francisco" Clicked="OnSuggestionClicked"
+            <Button Text="Weather in San Francisco" Clicked="OnSuggestionClicked"
                     FontSize="12" Padding="12,6" CornerRadius="16"
                     BackgroundColor="#F3F4F6" TextColor="#6366F1" />
-            <Button Text="🌧️ Weather in London" Clicked="OnSuggestionClicked"
+            <Button Text="Weather in New York" Clicked="OnSuggestionClicked"
                     FontSize="12" Padding="12,6" CornerRadius="16"
                     BackgroundColor="#F3F4F6" TextColor="#6366F1" />
-            <Button Text="☀️ Weather in Tokyo" Clicked="OnSuggestionClicked"
+            <Button Text="Weather in Tokyo" Clicked="OnSuggestionClicked"
                     FontSize="12" Padding="12,6" CornerRadius="16"
                     BackgroundColor="#F3F4F6" TextColor="#6366F1" />
         </HorizontalStackLayout>
 
-        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="8" ColumnSpacing="8">
-            <Entry x:Name="InputEntry" Placeholder="Type a message..."
+        <!-- Input area -->
+        <Grid Grid.Row="3" ColumnDefinitions="*,Auto" Margin="8" ColumnSpacing="8">
+            <Entry x:Name="InputEntry" Placeholder="Ask about the weather..."
                    IsEnabled="{Binding Session.IsProcessing, Converter={StaticResource InverseBoolConverter}}" />
             <Button Grid.Column="1" Text="Send" Clicked="OnSendClicked"
                     BackgroundColor="#6366F1" TextColor="White" CornerRadius="8" />

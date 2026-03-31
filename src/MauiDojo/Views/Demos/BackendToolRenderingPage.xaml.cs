@@ -7,6 +7,13 @@ namespace MauiDojo.Views.Demos;
 
 public partial class BackendToolRenderingPage : ContentPage
 {
+    private static readonly Dictionary<string, string> SuggestionMessages = new()
+    {
+        ["Weather in San Francisco"] = "What's the weather like in San Francisco?",
+        ["Weather in New York"] = "What's the weather like in New York?",
+        ["Weather in Tokyo"] = "What's the weather like in Tokyo?",
+    };
+
     public BackendToolRenderingPage()
     {
         InitializeComponent();
@@ -34,13 +41,14 @@ public partial class BackendToolRenderingPage : ContentPage
     {
         var session = (BindingContext as dynamic)?.Session as MauiDojo.Agent.Maui.Services.IAgentSession;
         if (session is null || sender is not Button btn) return;
-        var text = btn.Text;
-        // Strip leading emoji + space
-        if (text.Length > 2 && (char.IsHighSurrogate(text[0]) || text[0] > 127))
+        if (SuggestionMessages.TryGetValue(btn.Text, out var message))
         {
-            var spaceIdx = text.IndexOf(' ');
-            if (spaceIdx > 0 && spaceIdx < 4) text = text[(spaceIdx + 1)..];
+            if (BindingContext is BackendToolRenderingViewModel vm)
+            {
+                vm.CurrentWeather = null;
+                vm.IsWeatherLoading = true;
+            }
+            await session.SendAsync(new ChatMessage(ChatRole.User, message));
         }
-        await session.SendAsync(new ChatMessage(ChatRole.User, text));
     }
 }

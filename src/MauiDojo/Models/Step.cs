@@ -25,4 +25,12 @@ public sealed partial class Step : ObservableObject
     [ObservableProperty]
     [property: JsonIgnore]
     private bool _isSelected = true;
+
+    /// <summary>Whether this step is completed.</summary>
+    [JsonIgnore]
+    public bool IsCompleted => Status == StepStatus.Completed;
+
+    /// <summary>Display text for the status badge.</summary>
+    [JsonIgnore]
+    public string StatusText => IsCompleted ? "Done" : "Pending";
 }

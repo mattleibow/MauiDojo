@@ -4,6 +4,7 @@
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              xmlns:local="clr-namespace:MauiDojo.Converters"
              x:Class="MauiDojo.Views.Demos.SharedStatePage"
+             x:Name="ThisPage"
              Title="Shared State">
 
     <ContentPage.Resources>
@@ -12,44 +13,130 @@
         <local:BoolToTextColorConverter x:Key="BoolToTextColorConverter" />
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="*,Auto,Auto">
-        <CollectionView Grid.Row="0" x:Name="MessagesView" Margin="8"
-                        ItemsSource="{Binding Session.Messages}" SelectionMode="None">
-            <CollectionView.EmptyView>
-                <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="8">
-                    <Label Text="🥋" FontSize="48" HorizontalOptions="Center" />
-                    <Label Text="Shared State" FontSize="16" TextColor="Gray" HorizontalOptions="Center" />
+    <Grid ColumnDefinitions="*,*" ColumnSpacing="0">
+
+        <!-- LEFT: Recipe Form -->
+        <ScrollView Grid.Column="0" Padding="16" BackgroundColor="#FAFAFA">
+            <VerticalStackLayout Spacing="12">
+
+                <Label Text="🍳 Recipe Editor" FontSize="20" FontAttributes="Bold" TextColor="#1F2937" />
+
+                <!-- Title -->
+                <Label Text="Recipe Title" FontSize="13" FontAttributes="Bold" TextColor="#374151" />
+                <Entry Text="{Binding RecipeTitle}" Placeholder="Recipe name"
+                       BackgroundColor="White" />
+
+                <!-- Cooking Time -->
+                <Label Text="Cooking Time" FontSize="13" FontAttributes="Bold" TextColor="#374151" />
+                <Picker ItemsSource="{Binding AvailableCookingTimes}"
+                        SelectedItem="{Binding CookingTime}"
+                        BackgroundColor="White" />
+
+                <!-- Skill Level -->
+                <Label Text="Skill Level" FontSize="13" FontAttributes="Bold" TextColor="#374151" />
+                <Picker ItemsSource="{Binding AvailableSkillLevels}"
+                        SelectedItem="{Binding SkillLevel}"
+                        BackgroundColor="White" />
+
+                <!-- Dietary Preferences -->
+                <Label Text="Dietary Preferences" FontSize="13" FontAttributes="Bold" TextColor="#374151" />
+                <FlexLayout BindableLayout.ItemsSource="{Binding AvailablePreferences}"
+                            Wrap="Wrap" Direction="Row">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate>
+                            <HorizontalStackLayout Spacing="4" Padding="4,2">
+                                <CheckBox CheckedChanged="OnPreferenceCheckedChanged"
+                                          VerticalOptions="Center" Color="#6366F1" />
+                                <Label Text="{Binding .}" VerticalOptions="Center" FontSize="13"
+                                       TextColor="#374151" />
+                            </HorizontalStackLayout>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </FlexLayout>
+
+                <!-- Ingredients -->
+                <Label Text="Ingredients" FontSize="13" FontAttributes="Bold" TextColor="#374151" />
+                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Ingredients}" Spacing="4">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate>
+                            <Grid ColumnDefinitions="Auto,*,80,Auto" ColumnSpacing="4" Padding="0,2">
+                                <Label Text="{Binding Icon}" VerticalOptions="Center" FontSize="16" />
+                                <Entry Grid.Column="1" Text="{Binding Name}" Placeholder="Ingredient"
+                                       FontSize="13" BackgroundColor="White" />
+                                <Entry Grid.Column="2" Text="{Binding Amount}" Placeholder="Amount"
+                                       FontSize="13" BackgroundColor="White" />
+                                <Button Grid.Column="3" Text="×" Clicked="OnRemoveIngredientClicked"
+                                        FontSize="14" Padding="8,4" BackgroundColor="Transparent"
+                                        TextColor="#EF4444" />
+                            </Grid>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
                 </VerticalStackLayout>
-            </CollectionView.EmptyView>
-            <CollectionView.ItemTemplate>
-                <DataTemplate>
-                    <Frame Margin="4,2" Padding="12,8" CornerRadius="12" HasShadow="False"
-                           BackgroundColor="{Binding IsUser, Converter={StaticResource BoolToColorConverter}}">
-                        <Label Text="{Binding Text}"
-                               TextColor="{Binding IsUser, Converter={StaticResource BoolToTextColorConverter}}" />
-                    </Frame>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
+                <Button Text="+ Add Ingredient" Command="{Binding AddIngredientCommand}"
+                        FontSize="12" Padding="8,4" BackgroundColor="#F3F4F6" TextColor="#6366F1"
+                        HorizontalOptions="Start" CornerRadius="8" />
 
-        <HorizontalStackLayout Grid.Row="1" Spacing="8" Margin="8,4"
-                               IsVisible="{Binding Session.IsProcessing, Converter={StaticResource InverseBoolConverter}}">
-            <Button Text="🍝 Suggest a pasta recipe" Clicked="OnSuggestionClicked"
-                    FontSize="12" Padding="12,6" CornerRadius="16"
-                    BackgroundColor="#F3F4F6" TextColor="#6366F1" />
-            <Button Text="🥗 Make it healthier" Clicked="OnSuggestionClicked"
-                    FontSize="12" Padding="12,6" CornerRadius="16"
-                    BackgroundColor="#F3F4F6" TextColor="#6366F1" />
-            <Button Text="🌶️ Add more spice" Clicked="OnSuggestionClicked"
-                    FontSize="12" Padding="12,6" CornerRadius="16"
-                    BackgroundColor="#F3F4F6" TextColor="#6366F1" />
-        </HorizontalStackLayout>
+                <!-- Instructions -->
+                <Label Text="Instructions" FontSize="13" FontAttributes="Bold" TextColor="#374151" />
+                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Instructions}" Spacing="4">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate>
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="4" Padding="0,2">
+                                <Label Text="{Binding .}" VerticalOptions="Center" FontSize="13"
+                                       TextColor="#374151" LineBreakMode="WordWrap" />
+                                <Button Grid.Column="1" Text="×" Clicked="OnRemoveInstructionClicked"
+                                        FontSize="14" Padding="8,4" BackgroundColor="Transparent"
+                                        TextColor="#EF4444" />
+                            </Grid>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+                <Button Text="+ Add Step" Command="{Binding AddInstructionCommand}"
+                        FontSize="12" Padding="8,4" BackgroundColor="#F3F4F6" TextColor="#6366F1"
+                        HorizontalOptions="Start" CornerRadius="8" />
 
-        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="8" ColumnSpacing="8">
-            <Entry x:Name="InputEntry" Placeholder="Type a message..."
-                   IsEnabled="{Binding Session.IsProcessing, Converter={StaticResource InverseBoolConverter}}" />
-            <Button Grid.Column="1" Text="Send" Clicked="OnSendClicked"
-                    BackgroundColor="#6366F1" TextColor="White" CornerRadius="8" />
+                <!-- Improve with AI button -->
+                <Button Text="✨ Improve with AI" Command="{Binding ImproveWithAICommand}"
+                        IsEnabled="{Binding Session.IsProcessing, Converter={StaticResource InverseBoolConverter}}"
+                        BackgroundColor="#6366F1" TextColor="White" CornerRadius="8"
+                        FontSize="16" Padding="16,12" Margin="0,8,0,0">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding Session.IsProcessing}" Value="True">
+                            <Setter Property="Text" Value="Please Wait..." />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- RIGHT: Chat Panel -->
+        <Grid Grid.Column="1" RowDefinitions="*,Auto" BackgroundColor="White">
+            <CollectionView Grid.Row="0" x:Name="MessagesView" Margin="8"
+                            ItemsSource="{Binding Session.Messages}" SelectionMode="None">
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="8">
+                        <Label Text="🥋" FontSize="48" HorizontalOptions="Center" />
+                        <Label Text="Shared State" FontSize="16" TextColor="Gray" HorizontalOptions="Center" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Frame Margin="4,2" Padding="12,8" CornerRadius="12" HasShadow="False"
+                               BackgroundColor="{Binding IsUser, Converter={StaticResource BoolToColorConverter}}">
+                            <Label Text="{Binding Text}"
+                                   TextColor="{Binding IsUser, Converter={StaticResource BoolToTextColorConverter}}" />
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="8" ColumnSpacing="8">
+                <Entry x:Name="InputEntry" Placeholder="Ask about your recipe..."
+                       IsEnabled="{Binding Session.IsProcessing, Converter={StaticResource InverseBoolConverter}}" />
+                <Button Grid.Column="1" Text="Send" Clicked="OnSendClicked"
+                        BackgroundColor="#6366F1" TextColor="White" CornerRadius="8" />
+            </Grid>
         </Grid>
     </Grid>
 </ContentPage>

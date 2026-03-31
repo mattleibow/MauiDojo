@@ -22,20 +22,64 @@ public partial class HumanInTheLoopViewModel : ObservableObject, IDisposable
     private string _inputText = string.Empty;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasPlan))]
+    [NotifyPropertyChangedFor(nameof(PlanHeaderText))]
+    [NotifyPropertyChangedFor(nameof(PlanProgressText))]
+    [NotifyPropertyChangedFor(nameof(PlanStatusColor))]
+    [NotifyPropertyChangedFor(nameof(ShowPlanBadge))]
+    [NotifyPropertyChangedFor(nameof(PlanBadgeText))]
     private Plan? _currentPlan;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasPlan))]
+    [NotifyPropertyChangedFor(nameof(PlanHeaderText))]
+    [NotifyPropertyChangedFor(nameof(PlanProgressText))]
+    [NotifyPropertyChangedFor(nameof(PlanStatusColor))]
+    [NotifyPropertyChangedFor(nameof(ShowPlanBadge))]
+    [NotifyPropertyChangedFor(nameof(PlanBadgeText))]
+    [NotifyPropertyChangedFor(nameof(ConfirmButtonText))]
     private bool _isAwaitingConfirmation;
 
+    [ObservableProperty]
+    private bool _wasRejected;
+
     public IAgentSession Session { get; }
+
+    public bool HasPlan => CurrentPlan is not null;
+
+    public string PlanHeaderText => IsAwaitingConfirmation ? "Plan Confirmation"
+        : WasRejected ? "Plan Rejected"
+        : CurrentPlan?.IsComplete == true ? "Plan Completed"
+        : "Executing Plan";
+
+    public string PlanProgressText => CurrentPlan is null ? ""
+        : $"{CurrentPlan.CompletedCount} / {CurrentPlan.Steps.Count} completed";
+
+    public Color PlanStatusColor => CurrentPlan?.IsComplete == true ? Color.FromArgb("#10B981")
+        : WasRejected ? Color.FromArgb("#EF4444")
+        : Color.FromArgb("#6366F1");
+
+    public bool ShowPlanBadge => CurrentPlan?.IsComplete == true || WasRejected;
+
+    public string PlanBadgeText => CurrentPlan?.IsComplete == true ? "✓ All Done"
+        : WasRejected ? "✗ Cancelled" : "";
+
+    public string ConfirmButtonText
+    {
+        get
+        {
+            var count = CurrentPlan?.Steps.Count(s => s.IsSelected) ?? 0;
+            return $"Confirm Selected ({count})";
+        }
+    }
 
     /// <summary>Tracks which step indices the user has checked for confirmation.</summary>
     public ObservableCollection<int> SelectedSteps { get; } = [];
 
     public ObservableCollection<Suggestion> Suggestions { get; } =
     [
-        new("Plan a birthday party", "Help me plan a birthday party for my friend"),
-        new("Create a workout plan", "Create a weekly workout plan for a beginner"),
+        new("Simple plan", "Create a simple 5-step plan for organizing a birthday party"),
+        new("Complex plan", "Create a detailed 10-step plan for launching a new product"),
     ];
 
     public HumanInTheLoopViewModel(

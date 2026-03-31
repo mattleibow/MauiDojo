@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              xmlns:local="clr-namespace:MauiDojo.Converters"
+             xmlns:models="clr-namespace:MauiDojo.Models"
              x:Class="MauiDojo.Views.Demos.AgenticGenerativeUIPage"
              Title="Agentic Generative UI">
 
@@ -10,9 +11,10 @@
         <toolkit:InvertedBoolConverter x:Key="InverseBoolConverter" />
         <local:BoolToColorConverter x:Key="BoolToColorConverter" />
         <local:BoolToTextColorConverter x:Key="BoolToTextColorConverter" />
+        <local:IsNotNullConverter x:Key="IsNotNullConverter" />
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="*,Auto,Auto">
+    <Grid RowDefinitions="*,Auto,Auto,Auto">
         <CollectionView Grid.Row="0" x:Name="MessagesView" Margin="8"
                         ItemsSource="{Binding Session.Messages}" SelectionMode="None">
             <CollectionView.EmptyView>
@@ -32,21 +34,57 @@
             </CollectionView.ItemTemplate>
         </CollectionView>
 
-        <HorizontalStackLayout Grid.Row="1" Spacing="8" Margin="8,4"
+        <!-- Plan Progress Panel -->
+        <Frame Grid.Row="1" IsVisible="{Binding CurrentPlan, Converter={StaticResource IsNotNullConverter}}"
+               Margin="8,4" Padding="12" CornerRadius="12" HasShadow="False"
+               BackgroundColor="#F0FDF4" BorderColor="#BBF7D0">
+            <VerticalStackLayout Spacing="8">
+                <HorizontalStackLayout Spacing="8">
+                    <Label Text="📋 Plan Progress" FontSize="16" FontAttributes="Bold" TextColor="#166534" />
+                    <HorizontalStackLayout Spacing="2">
+                        <Label Text="{Binding CurrentPlan.CompletedCount}" FontSize="13" FontAttributes="Bold" TextColor="#166534" />
+                        <Label Text=" / " FontSize="13" TextColor="#166534" />
+                        <Label Text="{Binding CurrentPlan.Steps.Count}" FontSize="13" TextColor="#166534" />
+                        <Label Text=" completed" FontSize="13" TextColor="#166534" />
+                    </HorizontalStackLayout>
+                </HorizontalStackLayout>
+
+                <VerticalStackLayout BindableLayout.ItemsSource="{Binding CurrentPlan.Steps}" Spacing="6">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate>
+                            <HorizontalStackLayout Spacing="8">
+                                <Label Text="⏳" FontSize="14" VerticalOptions="Center">
+                                    <Label.Triggers>
+                                        <DataTrigger TargetType="Label" Binding="{Binding Status}"
+                                                     Value="{x:Static models:StepStatus.Completed}">
+                                            <Setter Property="Text" Value="✅" />
+                                        </DataTrigger>
+                                    </Label.Triggers>
+                                </Label>
+                                <Label Text="{Binding Description}" FontSize="13" TextColor="#374151"
+                                       VerticalOptions="Center" LineBreakMode="WordWrap"
+                                       HorizontalOptions="FillAndExpand" />
+                            </HorizontalStackLayout>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </Frame>
+
+        <HorizontalStackLayout Grid.Row="2" Spacing="8" Margin="8,4"
                                IsVisible="{Binding Session.IsProcessing, Converter={StaticResource InverseBoolConverter}}">
-            <Button Text="🚀 Plan a trip to Mars" Clicked="OnSuggestionClicked"
+            <Button Text="Simple plan" Clicked="OnSuggestionClicked"
+                    AutomationId="Please build a plan to go to mars in 5 steps."
                     FontSize="12" Padding="12,6" CornerRadius="16"
                     BackgroundColor="#F3F4F6" TextColor="#6366F1" />
-            <Button Text="🍕 Make pizza from scratch" Clicked="OnSuggestionClicked"
-                    FontSize="12" Padding="12,6" CornerRadius="16"
-                    BackgroundColor="#F3F4F6" TextColor="#6366F1" />
-            <Button Text="🏠 Build a treehouse" Clicked="OnSuggestionClicked"
+            <Button Text="Complex plan" Clicked="OnSuggestionClicked"
+                    AutomationId="Please build a plan to make pizza in 10 steps."
                     FontSize="12" Padding="12,6" CornerRadius="16"
                     BackgroundColor="#F3F4F6" TextColor="#6366F1" />
         </HorizontalStackLayout>
 
-        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="8" ColumnSpacing="8">
-            <Entry x:Name="InputEntry" Placeholder="Type a message..."
+        <Grid Grid.Row="3" ColumnDefinitions="*,Auto" Margin="8" ColumnSpacing="8">
+            <Entry x:Name="InputEntry" Placeholder="Ask me to plan something..."
                    IsEnabled="{Binding Session.IsProcessing, Converter={StaticResource InverseBoolConverter}}" />
             <Button Grid.Column="1" Text="Send" Clicked="OnSendClicked"
                     BackgroundColor="#6366F1" TextColor="White" CornerRadius="8" />

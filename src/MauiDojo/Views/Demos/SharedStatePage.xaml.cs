@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
 
+using MauiDojo.Models;
 using MauiDojo.ViewModels;
 using Microsoft.Extensions.AI;
 
@@ -30,17 +31,27 @@ public partial class SharedStatePage : ContentPage
         await session.SendAsync(new ChatMessage(ChatRole.User, text));
     }
 
-    private async void OnSuggestionClicked(object? sender, EventArgs e)
+    private void OnPreferenceCheckedChanged(object? sender, CheckedChangedEventArgs e)
     {
-        var session = (BindingContext as dynamic)?.Session as MauiDojo.Agent.Maui.Services.IAgentSession;
-        if (session is null || sender is not Button btn) return;
-        var text = btn.Text;
-        // Strip leading emoji + space
-        if (text.Length > 2 && (char.IsHighSurrogate(text[0]) || text[0] > 127))
+        if (sender is CheckBox cb && cb.BindingContext is string pref)
         {
-            var spaceIdx = text.IndexOf(' ');
-            if (spaceIdx > 0 && spaceIdx < 4) text = text[(spaceIdx + 1)..];
+            (BindingContext as SharedStateViewModel)?.TogglePreferenceCommand.Execute(pref);
         }
-        await session.SendAsync(new ChatMessage(ChatRole.User, text));
+    }
+
+    private void OnRemoveIngredientClicked(object? sender, EventArgs e)
+    {
+        if (sender is Button btn && btn.BindingContext is Ingredient ingredient)
+        {
+            (BindingContext as SharedStateViewModel)?.RemoveIngredientCommand.Execute(ingredient);
+        }
+    }
+
+    private void OnRemoveInstructionClicked(object? sender, EventArgs e)
+    {
+        if (sender is Button btn && btn.BindingContext is string instruction)
+        {
+            (BindingContext as SharedStateViewModel)?.RemoveInstructionCommand.Execute(instruction);
+        }
     }
 }

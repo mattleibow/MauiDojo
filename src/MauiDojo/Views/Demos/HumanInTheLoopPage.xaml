@@ -10,15 +10,66 @@
         <toolkit:InvertedBoolConverter x:Key="InverseBoolConverter" />
         <local:BoolToColorConverter x:Key="BoolToColorConverter" />
         <local:BoolToTextColorConverter x:Key="BoolToTextColorConverter" />
+        <local:BoolToStrikethroughConverter x:Key="BoolToStrikethroughConverter" />
+        <local:BoolToStatusColorConverter x:Key="BoolToStatusColorConverter" />
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="*,Auto,Auto">
-        <CollectionView Grid.Row="0" x:Name="MessagesView" Margin="8"
+    <Grid RowDefinitions="Auto,*,Auto,Auto">
+
+        <!-- Plan Card (shows when CurrentPlan is not null) -->
+        <Frame Grid.Row="0" IsVisible="{Binding HasPlan}"
+               Margin="8" Padding="16" CornerRadius="12" HasShadow="True"
+               BackgroundColor="White" BorderColor="#E5E7EB">
+            <VerticalStackLayout Spacing="8">
+                <!-- Header -->
+                <HorizontalStackLayout Spacing="8">
+                    <Label Text="{Binding PlanHeaderText}" FontSize="18" FontAttributes="Bold" />
+                    <Frame Padding="4,2" CornerRadius="8" HasShadow="False"
+                           BackgroundColor="{Binding PlanStatusColor}" IsVisible="{Binding ShowPlanBadge}">
+                        <Label Text="{Binding PlanBadgeText}" FontSize="11" TextColor="White" />
+                    </Frame>
+                </HorizontalStackLayout>
+                <Label Text="{Binding PlanProgressText}" FontSize="12" TextColor="#757575" />
+
+                <!-- Steps list -->
+                <CollectionView ItemsSource="{Binding CurrentPlan.Steps}" SelectionMode="None">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <HorizontalStackLayout Spacing="8" Padding="4">
+                                <CheckBox IsChecked="{Binding IsSelected}"
+                                          IsEnabled="{Binding IsCompleted, Converter={StaticResource InverseBoolConverter}}" />
+                                <Label Text="{Binding Description}" VerticalOptions="Center"
+                                       TextDecorations="{Binding IsCompleted, Converter={StaticResource BoolToStrikethroughConverter}}" />
+                                <Frame Padding="4,2" CornerRadius="6" HasShadow="False" VerticalOptions="Center"
+                                       BackgroundColor="{Binding IsCompleted, Converter={StaticResource BoolToStatusColorConverter}}">
+                                    <Label Text="{Binding StatusText}" FontSize="10" TextColor="White" />
+                                </Frame>
+                            </HorizontalStackLayout>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <!-- Confirm / Reject buttons (only during confirmation) -->
+                <HorizontalStackLayout Spacing="8" IsVisible="{Binding IsAwaitingConfirmation}">
+                    <Button Text="{Binding ConfirmButtonText}"
+                            Command="{Binding ConfirmPlanCommand}"
+                            BackgroundColor="#6366F1" TextColor="White" CornerRadius="8"
+                            Padding="16,8" />
+                    <Button Text="Reject"
+                            Command="{Binding RejectPlanCommand}"
+                            BackgroundColor="#EF4444" TextColor="White" CornerRadius="8"
+                            Padding="16,8" />
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+        </Frame>
+
+        <!-- Messages list -->
+        <CollectionView Grid.Row="1" x:Name="MessagesView" Margin="8"
                         ItemsSource="{Binding Session.Messages}" SelectionMode="None">
             <CollectionView.EmptyView>
                 <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="8">
-                    <Label Text="🥋" FontSize="48" HorizontalOptions="Center" />
-                    <Label Text="Human in the Loop" FontSize="16" TextColor="Gray" HorizontalOptions="Center" />
+                    <Label Text="🙋" FontSize="48" HorizontalOptions="Center" />
+                    <Label Text="Ask for a plan" FontSize="16" TextColor="Gray" HorizontalOptions="Center" />
                 </VerticalStackLayout>
             </CollectionView.EmptyView>
             <CollectionView.ItemTemplate>
@@ -32,21 +83,20 @@
             </CollectionView.ItemTemplate>
         </CollectionView>
 
-        <HorizontalStackLayout Grid.Row="1" Spacing="8" Margin="8,4"
+        <!-- Suggestions -->
+        <HorizontalStackLayout Grid.Row="2" Spacing="8" Margin="8,4"
                                IsVisible="{Binding Session.IsProcessing, Converter={StaticResource InverseBoolConverter}}">
-            <Button Text="🎂 Plan a birthday party" Clicked="OnSuggestionClicked"
+            <Button Text="Simple plan" Clicked="OnSuggestionClicked"
                     FontSize="12" Padding="12,6" CornerRadius="16"
                     BackgroundColor="#F3F4F6" TextColor="#6366F1" />
-            <Button Text="💪 Create a workout plan" Clicked="OnSuggestionClicked"
-                    FontSize="12" Padding="12,6" CornerRadius="16"
-                    BackgroundColor="#F3F4F6" TextColor="#6366F1" />
-            <Button Text="📚 Plan a study schedule" Clicked="OnSuggestionClicked"
+            <Button Text="Complex plan" Clicked="OnSuggestionClicked"
                     FontSize="12" Padding="12,6" CornerRadius="16"
                     BackgroundColor="#F3F4F6" TextColor="#6366F1" />
         </HorizontalStackLayout>
 
-        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="8" ColumnSpacing="8">
-            <Entry x:Name="InputEntry" Placeholder="Type a message..."
+        <!-- Input area -->
+        <Grid Grid.Row="3" ColumnDefinitions="*,Auto" Margin="8" ColumnSpacing="8">
+            <Entry x:Name="InputEntry" Placeholder="Ask for a plan..."
                    IsEnabled="{Binding Session.IsProcessing, Converter={StaticResource InverseBoolConverter}}" />
             <Button Grid.Column="1" Text="Send" Clicked="OnSendClicked"
                     BackgroundColor="#6366F1" TextColor="White" CornerRadius="8" />

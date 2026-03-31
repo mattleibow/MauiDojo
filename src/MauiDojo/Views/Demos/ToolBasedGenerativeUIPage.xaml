@@ -12,44 +12,111 @@
         <local:BoolToTextColorConverter x:Key="BoolToTextColorConverter" />
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="*,Auto,Auto">
-        <CollectionView Grid.Row="0" x:Name="MessagesView" Margin="8"
-                        ItemsSource="{Binding Session.Messages}" SelectionMode="None">
-            <CollectionView.EmptyView>
-                <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="8">
-                    <Label Text="🥋" FontSize="48" HorizontalOptions="Center" />
-                    <Label Text="Tool-Based Generative UI" FontSize="16" TextColor="Gray" HorizontalOptions="Center" />
+    <Grid ColumnDefinitions="*,*" ColumnSpacing="0">
+
+        <!-- LEFT: Haiku Display -->
+        <Grid Grid.Column="0" RowDefinitions="*,Auto"
+              BackgroundColor="{Binding CurrentHaikuBackgroundColor}">
+
+            <!-- Haiku Content (visible when haikus exist) -->
+            <ScrollView Grid.Row="0" IsVisible="{Binding HasHaikus}"
+                        VerticalOptions="Center" Padding="24">
+                <VerticalStackLayout Spacing="16" HorizontalOptions="Center">
+                    <!-- Japanese lines -->
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding CurrentHaiku.Japanese}"
+                                         Spacing="4" HorizontalOptions="Center">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate>
+                                <Label Text="{Binding .}" FontSize="28" TextColor="White"
+                                       HorizontalTextAlignment="Center" />
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+
+                    <BoxView HeightRequest="1" BackgroundColor="White" Opacity="0.3"
+                             HorizontalOptions="Center" WidthRequest="200" Margin="0,8" />
+
+                    <!-- English lines -->
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding CurrentHaiku.English}"
+                                         Spacing="4" HorizontalOptions="Center">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate>
+                                <Label Text="{Binding .}" FontSize="16" TextColor="White"
+                                       Opacity="0.9" HorizontalTextAlignment="Center" />
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
                 </VerticalStackLayout>
-            </CollectionView.EmptyView>
-            <CollectionView.ItemTemplate>
-                <DataTemplate>
-                    <Frame Margin="4,2" Padding="12,8" CornerRadius="12" HasShadow="False"
-                           BackgroundColor="{Binding IsUser, Converter={StaticResource BoolToColorConverter}}">
-                        <Label Text="{Binding Text}"
-                               TextColor="{Binding IsUser, Converter={StaticResource BoolToTextColorConverter}}" />
-                    </Frame>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
+            </ScrollView>
 
-        <HorizontalStackLayout Grid.Row="1" Spacing="8" Margin="8,4"
-                               IsVisible="{Binding Session.IsProcessing, Converter={StaticResource InverseBoolConverter}}">
-            <Button Text="🌸 Nature haiku" Clicked="OnSuggestionClicked"
-                    FontSize="12" Padding="12,6" CornerRadius="16"
-                    BackgroundColor="#F3F4F6" TextColor="#6366F1" />
-            <Button Text="🌊 Ocean haiku" Clicked="OnSuggestionClicked"
-                    FontSize="12" Padding="12,6" CornerRadius="16"
-                    BackgroundColor="#F3F4F6" TextColor="#6366F1" />
-            <Button Text="⛰️ Mountain haiku" Clicked="OnSuggestionClicked"
-                    FontSize="12" Padding="12,6" CornerRadius="16"
-                    BackgroundColor="#F3F4F6" TextColor="#6366F1" />
-        </HorizontalStackLayout>
+            <!-- Empty state -->
+            <VerticalStackLayout Grid.Row="0"
+                                 IsVisible="{Binding HasHaikus, Converter={StaticResource InverseBoolConverter}}"
+                                 VerticalOptions="Center" HorizontalOptions="Center" Spacing="12" Padding="24">
+                <Label Text="🎋" FontSize="64" HorizontalOptions="Center" />
+                <Label Text="Ask for a haiku to get started" FontSize="16"
+                       TextColor="White" Opacity="0.8" HorizontalOptions="Center" />
+            </VerticalStackLayout>
 
-        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="8" ColumnSpacing="8">
-            <Entry x:Name="InputEntry" Placeholder="Type a message..."
-                   IsEnabled="{Binding Session.IsProcessing, Converter={StaticResource InverseBoolConverter}}" />
-            <Button Grid.Column="1" Text="Send" Clicked="OnSendClicked"
-                    BackgroundColor="#6366F1" TextColor="White" CornerRadius="8" />
+            <!-- Prev/Next navigation -->
+            <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto" Margin="16,8" IsVisible="{Binding HasHaikus}">
+                <Button Grid.Column="0" Text="◀" Command="{Binding PreviousHaikuCommand}"
+                        IsEnabled="{Binding HasPreviousHaiku}"
+                        BackgroundColor="Transparent" TextColor="White" FontSize="18"
+                        Padding="12,8" />
+                <Label Grid.Column="1" Text="{Binding HaikuPosition}"
+                       HorizontalTextAlignment="Center" VerticalOptions="Center"
+                       TextColor="White" FontSize="14" />
+                <Button Grid.Column="2" Text="▶" Command="{Binding NextHaikuCommand}"
+                        IsEnabled="{Binding HasNextHaiku}"
+                        BackgroundColor="Transparent" TextColor="White" FontSize="18"
+                        Padding="12,8" />
+            </Grid>
+        </Grid>
+
+        <!-- RIGHT: Chat Panel -->
+        <Grid Grid.Column="1" RowDefinitions="*,Auto,Auto" BackgroundColor="White">
+            <CollectionView Grid.Row="0" x:Name="MessagesView" Margin="8"
+                            ItemsSource="{Binding Session.Messages}" SelectionMode="None">
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="8">
+                        <Label Text="🥋" FontSize="48" HorizontalOptions="Center" />
+                        <Label Text="Tool-Based Generative UI" FontSize="16" TextColor="Gray" HorizontalOptions="Center" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Frame Margin="4,2" Padding="12,8" CornerRadius="12" HasShadow="False"
+                               BackgroundColor="{Binding IsUser, Converter={StaticResource BoolToColorConverter}}">
+                            <Label Text="{Binding Text}"
+                                   TextColor="{Binding IsUser, Converter={StaticResource BoolToTextColorConverter}}" />
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <HorizontalStackLayout Grid.Row="1" Spacing="8" Margin="8,4"
+                                   IsVisible="{Binding Session.IsProcessing, Converter={StaticResource InverseBoolConverter}}">
+                <Button Text="Nature Haiku" Clicked="OnSuggestionClicked"
+                        AutomationId="Write me a haiku about nature."
+                        FontSize="12" Padding="12,6" CornerRadius="16"
+                        BackgroundColor="#F3F4F6" TextColor="#6366F1" />
+                <Button Text="Ocean Haiku" Clicked="OnSuggestionClicked"
+                        AutomationId="Create a haiku about the ocean."
+                        FontSize="12" Padding="12,6" CornerRadius="16"
+                        BackgroundColor="#F3F4F6" TextColor="#6366F1" />
+                <Button Text="Spring Haiku" Clicked="OnSuggestionClicked"
+                        AutomationId="Generate a haiku about spring."
+                        FontSize="12" Padding="12,6" CornerRadius="16"
+                        BackgroundColor="#F3F4F6" TextColor="#6366F1" />
+            </HorizontalStackLayout>
+
+            <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="8" ColumnSpacing="8">
+                <Entry x:Name="InputEntry" Placeholder="Ask for a haiku..."
+                       IsEnabled="{Binding Session.IsProcessing, Converter={StaticResource InverseBoolConverter}}" />
+                <Button Grid.Column="1" Text="Send" Clicked="OnSendClicked"
+                        BackgroundColor="#6366F1" TextColor="White" CornerRadius="8" />
+            </Grid>
         </Grid>
     </Grid>
 </ContentPage>

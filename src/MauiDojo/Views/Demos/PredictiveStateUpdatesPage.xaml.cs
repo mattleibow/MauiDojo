@@ -34,13 +34,7 @@ public partial class PredictiveStateUpdatesPage : ContentPage
     {
         var session = (BindingContext as dynamic)?.Session as MauiDojo.Agent.Maui.Services.IAgentSession;
         if (session is null || sender is not Button btn) return;
-        var text = btn.Text;
-        // Strip leading emoji + space
-        if (text.Length > 2 && (char.IsHighSurrogate(text[0]) || text[0] > 127))
-        {
-            var spaceIdx = text.IndexOf(' ');
-            if (spaceIdx > 0 && spaceIdx < 4) text = text[(spaceIdx + 1)..];
-        }
+        var text = !string.IsNullOrEmpty(btn.AutomationId) ? btn.AutomationId : btn.Text;
         await session.SendAsync(new ChatMessage(ChatRole.User, text));
     }
 }
