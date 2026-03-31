@@ -3,10 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              xmlns:local="clr-namespace:MauiDojo.Converters"
-             xmlns:templates="clr-namespace:MauiDojo.Views.Templates"
-             xmlns:vm="clr-namespace:MauiDojo.ViewModels"
              x:Class="MauiDojo.Views.Demos.HumanInTheLoopPage"
-             x:Name="ThisPage"
              Title="Human in the Loop">
 
     <ContentPage.Resources>
@@ -15,120 +12,77 @@
         <local:BoolToTextColorConverter x:Key="BoolToTextColorConverter" />
         <local:BoolToStrikethroughConverter x:Key="BoolToStrikethroughConverter" />
         <local:BoolToStatusColorConverter x:Key="BoolToStatusColorConverter" />
-
-        <!-- User message bubble -->
-        <DataTemplate x:Key="UserMessageTemplate">
-            <Frame Margin="4,2" Padding="12,8" CornerRadius="12" HasShadow="False"
-                   BackgroundColor="{Binding IsUser, Converter={StaticResource BoolToColorConverter}}">
-                <Label Text="{Binding Text}"
-                       TextColor="{Binding IsUser, Converter={StaticResource BoolToTextColorConverter}}" />
-            </Frame>
-        </DataTemplate>
-
-        <!-- Assistant text bubble -->
-        <DataTemplate x:Key="AssistantTextTemplate">
-            <Frame Margin="4,2" Padding="12,8" CornerRadius="12" HasShadow="False"
-                   BackgroundColor="#F3F4F6">
-                <Label Text="{Binding Text}" TextColor="#212121" />
-            </Frame>
-        </DataTemplate>
-
-        <!-- Inline plan card (rendered inside the message list) -->
-        <DataTemplate x:Key="PlanCardTemplate">
-            <Frame Margin="4,2" Padding="16" CornerRadius="12" HasShadow="True"
-                   BackgroundColor="White" BorderColor="#E5E7EB"
-                   IsVisible="{Binding Source={x:Reference ThisPage}, Path=BindingContext.HasPlan}">
-                <VerticalStackLayout Spacing="8">
-                    <!-- Header -->
-                    <HorizontalStackLayout Spacing="8">
-                        <Label Text="{Binding Source={x:Reference ThisPage}, Path=BindingContext.PlanHeaderText}"
-                               FontSize="18" FontAttributes="Bold" />
-                        <Frame Padding="4,2" CornerRadius="8" HasShadow="False"
-                               BackgroundColor="{Binding Source={x:Reference ThisPage}, Path=BindingContext.PlanStatusColor}"
-                               IsVisible="{Binding Source={x:Reference ThisPage}, Path=BindingContext.ShowPlanBadge}">
-                            <Label Text="{Binding Source={x:Reference ThisPage}, Path=BindingContext.PlanBadgeText}"
-                                   FontSize="11" TextColor="White" />
-                        </Frame>
-                    </HorizontalStackLayout>
-                    <Label Text="{Binding Source={x:Reference ThisPage}, Path=BindingContext.PlanProgressText}"
-                           FontSize="12" TextColor="#757575" />
-
-                    <!-- Steps list using BindableLayout (avoids nested CollectionView) -->
-                    <VerticalStackLayout
-                        BindableLayout.ItemsSource="{Binding Source={x:Reference ThisPage}, Path=BindingContext.CurrentPlan.Steps}">
-                        <BindableLayout.ItemTemplate>
-                            <DataTemplate>
-                                <HorizontalStackLayout Spacing="8" Padding="4">
-                                    <CheckBox IsChecked="{Binding IsSelected}"
-                                              IsEnabled="{Binding IsCompleted, Converter={StaticResource InverseBoolConverter}}" />
-                                    <Label Text="{Binding Description}" VerticalOptions="Center"
-                                           TextDecorations="{Binding IsCompleted, Converter={StaticResource BoolToStrikethroughConverter}}" />
-                                    <Frame Padding="4,2" CornerRadius="6" HasShadow="False" VerticalOptions="Center"
-                                           BackgroundColor="{Binding IsCompleted, Converter={StaticResource BoolToStatusColorConverter}}">
-                                        <Label Text="{Binding StatusText}" FontSize="10" TextColor="White" />
-                                    </Frame>
-                                </HorizontalStackLayout>
-                            </DataTemplate>
-                        </BindableLayout.ItemTemplate>
-                    </VerticalStackLayout>
-
-                    <!-- Confirm / Reject buttons (only during confirmation) -->
-                    <HorizontalStackLayout Spacing="8"
-                                           IsVisible="{Binding Source={x:Reference ThisPage}, Path=BindingContext.IsAwaitingConfirmation}">
-                        <Button Text="{Binding Source={x:Reference ThisPage}, Path=BindingContext.ConfirmButtonText}"
-                                Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.ConfirmPlanCommand}"
-                                BackgroundColor="#6366F1" TextColor="White" CornerRadius="8"
-                                Padding="16,8" />
-                        <Button Text="Reject"
-                                Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.RejectPlanCommand}"
-                                BackgroundColor="#EF4444" TextColor="White" CornerRadius="8"
-                                Padding="16,8" />
-                    </HorizontalStackLayout>
-                </VerticalStackLayout>
-            </Frame>
-        </DataTemplate>
-
-        <!-- Default: minimal view for messages with no displayable content -->
-        <DataTemplate x:Key="DefaultMessageTemplate">
-            <ContentView />
-        </DataTemplate>
-
-        <templates:ChatMessageTemplateSelector x:Key="MessageTemplateSelector"
-            UserMessageTemplate="{StaticResource UserMessageTemplate}"
-            AssistantTextTemplate="{StaticResource AssistantTextTemplate}"
-            PlanCardTemplate="{StaticResource PlanCardTemplate}"
-            DefaultTemplate="{StaticResource DefaultMessageTemplate}" />
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="*,Auto,Auto">
+    <Grid RowDefinitions="Auto,*,Auto,Auto">
 
-        <!-- Messages list using ScrollView + BindableLayout to show both
-             completed and pending messages. This is required because the plan card
-             must be visible while confirm_plan awaits user input (message is still pending). -->
-        <ScrollView Grid.Row="0" x:Name="MessagesScrollView" Margin="8">
-            <VerticalStackLayout Spacing="0">
-                <!-- Empty state (shown when no messages exist) -->
-                <VerticalStackLayout x:Name="EmptyView"
-                                     VerticalOptions="Center" HorizontalOptions="Center" Spacing="8"
-                                     Margin="0,40">
+        <!-- Plan Card (shows when plan exists, driven by ViewModel state) -->
+        <Frame Grid.Row="0" IsVisible="{Binding HasPlan}"
+               Margin="8,8,8,4" Padding="16" CornerRadius="12" HasShadow="True"
+               BackgroundColor="White" BorderColor="#E5E7EB">
+            <VerticalStackLayout Spacing="8">
+                <HorizontalStackLayout Spacing="8">
+                    <Label Text="{Binding PlanHeaderText}" FontSize="18" FontAttributes="Bold" />
+                    <Frame Padding="4,2" CornerRadius="8" HasShadow="False"
+                           BackgroundColor="{Binding PlanStatusColor}"
+                           IsVisible="{Binding ShowPlanBadge}">
+                        <Label Text="{Binding PlanBadgeText}" FontSize="11" TextColor="White" />
+                    </Frame>
+                </HorizontalStackLayout>
+                <Label Text="{Binding PlanProgressText}" FontSize="12" TextColor="#757575" />
+
+                <!-- Steps -->
+                <VerticalStackLayout BindableLayout.ItemsSource="{Binding CurrentPlan.Steps}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate>
+                            <HorizontalStackLayout Spacing="8" Padding="4">
+                                <CheckBox IsChecked="{Binding IsSelected}"
+                                          IsEnabled="{Binding IsCompleted, Converter={StaticResource InverseBoolConverter}}" />
+                                <Label Text="{Binding Description}" VerticalOptions="Center"
+                                       TextDecorations="{Binding IsCompleted, Converter={StaticResource BoolToStrikethroughConverter}}" />
+                                <Frame Padding="4,2" CornerRadius="6" HasShadow="False" VerticalOptions="Center"
+                                       BackgroundColor="{Binding IsCompleted, Converter={StaticResource BoolToStatusColorConverter}}">
+                                    <Label Text="{Binding StatusText}" FontSize="10" TextColor="White" />
+                                </Frame>
+                            </HorizontalStackLayout>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+
+                <!-- Confirm / Reject buttons -->
+                <HorizontalStackLayout Spacing="8" IsVisible="{Binding IsAwaitingConfirmation}">
+                    <Button Text="{Binding ConfirmButtonText}"
+                            Command="{Binding ConfirmPlanCommand}"
+                            BackgroundColor="#6366F1" TextColor="White" CornerRadius="8" Padding="16,8" />
+                    <Button Text="Reject"
+                            Command="{Binding RejectPlanCommand}"
+                            BackgroundColor="#EF4444" TextColor="White" CornerRadius="8" Padding="16,8" />
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+        </Frame>
+
+        <!-- Messages -->
+        <CollectionView Grid.Row="1" x:Name="MessagesView" Margin="8"
+                        ItemsSource="{Binding Session.Messages}" SelectionMode="None">
+            <CollectionView.EmptyView>
+                <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="8">
                     <Label Text="🙋" FontSize="48" HorizontalOptions="Center" />
                     <Label Text="Ask for a plan" FontSize="16" TextColor="Gray" HorizontalOptions="Center" />
                 </VerticalStackLayout>
-
-                <!-- Completed messages -->
-                <VerticalStackLayout
-                    BindableLayout.ItemsSource="{Binding Session.Messages}"
-                    BindableLayout.ItemTemplateSelector="{StaticResource MessageTemplateSelector}" />
-
-                <!-- Pending messages (visible during streaming — shows plan card during confirm_plan await) -->
-                <VerticalStackLayout
-                    BindableLayout.ItemsSource="{Binding Session.PendingMessages}"
-                    BindableLayout.ItemTemplateSelector="{StaticResource MessageTemplateSelector}" />
-            </VerticalStackLayout>
-        </ScrollView>
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Frame Margin="4,2" Padding="12,8" CornerRadius="12" HasShadow="False"
+                           BackgroundColor="{Binding IsUser, Converter={StaticResource BoolToColorConverter}}">
+                        <Label Text="{Binding Text}"
+                               TextColor="{Binding IsUser, Converter={StaticResource BoolToTextColorConverter}}" />
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
 
         <!-- Suggestions -->
-        <HorizontalStackLayout Grid.Row="1" Spacing="8" Margin="8,4"
+        <HorizontalStackLayout Grid.Row="2" Spacing="8" Margin="8,4"
                                IsVisible="{Binding Session.IsProcessing, Converter={StaticResource InverseBoolConverter}}">
             <Button Text="Simple plan" Clicked="OnSuggestionClicked"
                     FontSize="12" Padding="12,6" CornerRadius="16"
@@ -138,8 +92,8 @@
                     BackgroundColor="#F3F4F6" TextColor="#6366F1" />
         </HorizontalStackLayout>
 
-        <!-- Input area -->
-        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="8" ColumnSpacing="8">
+        <!-- Input -->
+        <Grid Grid.Row="3" ColumnDefinitions="*,Auto" Margin="8" ColumnSpacing="8">
             <Entry x:Name="InputEntry" Placeholder="Ask for a plan..."
                    IsEnabled="{Binding Session.IsProcessing, Converter={StaticResource InverseBoolConverter}}" />
             <Button Grid.Column="1" Text="Send" Clicked="OnSendClicked"

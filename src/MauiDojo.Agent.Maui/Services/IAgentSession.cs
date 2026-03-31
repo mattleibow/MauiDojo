@@ -28,6 +28,12 @@ public interface IAgentSession : INotifyPropertyChanged
     void RegisterTools(params AITool[] tools);
 
     /// <summary>
+    /// Optional system instructions prepended to every agent call.
+    /// Used to instruct the model to use specific tools.
+    /// </summary>
+    string? SystemInstructions { get; set; }
+
+    /// <summary>
     /// Sends messages to the agent and begins streaming the response.
     /// </summary>
     Task SendAsync(params ChatMessage[] messages);

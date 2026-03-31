@@ -40,6 +40,8 @@ public partial class AgentSession : ObservableObject, IAgentSession
 
     public void RegisterTools(params AITool[] tools) => _tools.AddRange(tools);
 
+    public string? SystemInstructions { get; set; }
+
     public async Task SendAsync(params ChatMessage[] messages)
     {
         // Wait for any in-progress request to finish before starting a new one
@@ -66,6 +68,13 @@ public partial class AgentSession : ObservableObject, IAgentSession
         {
             // Build the full conversation history preserving all content types
             var chatHistory = new List<ChatMessage>();
+
+            // Prepend system instructions if set (e.g., for HITL tool usage instructions)
+            if (!string.IsNullOrEmpty(SystemInstructions))
+            {
+                chatHistory.Add(new ChatMessage(ChatRole.System, SystemInstructions));
+            }
+
             foreach (var vm in Messages)
             {
                 chatHistory.Add(vm.ToChatMessage());
@@ -73,12 +82,23 @@ public partial class AgentSession : ObservableObject, IAgentSession
 
             // Pass registered frontend tools via ChatOptions.Tools
             AgentRunOptions? options = null;
+            try
+            {
+                File.AppendAllText(Path.Combine(FileSystem.AppDataDirectory, "agent-debug.log"),
+                    $"{DateTime.Now}: SendAsync called, _tools.Count={_tools.Count}\n");
+            }
+            catch { }
             if (_tools.Count > 0)
             {
+                Console.WriteLine($"[AgentSession] Passing {_tools.Count} tools: {string.Join(", ", _tools.Select(t => t is AIFunction f ? f.Name : t.GetType().Name))}");
                 options = new ChatClientAgentRunOptions(new ChatOptions
                 {
                     Tools = [.. _tools]
                 });
+            }
+            else
+            {
+                Console.WriteLine("[AgentSession] No tools registered");
             }
 
             ChatMessageViewModel? currentPending = null;
@@ -124,7 +144,7 @@ public partial class AgentSession : ObservableObject, IAgentSession
         catch (Exception ex)
         {
             // Log but don't crash the app
-            System.Diagnostics.Debug.WriteLine($"AgentSession.SendAsync error: {ex}");
+            Console.WriteLine($"AgentSession.SendAsync error: {ex}");
             await MainThread.InvokeOnMainThreadAsync(() =>
             {
                 PendingMessages.Clear();
@@ -144,6 +164,11 @@ public partial class AgentSession : ObservableObject, IAgentSession
     {
         foreach (var content in update.Contents)
         {
+            Console.WriteLine($"[AgentSession] Content: {content.GetType().Name}" +
+                (content is FunctionCallContent fcc2 ? $" Name={fcc2.Name}" : "") +
+                (content is FunctionResultContent frc2 ? $" CallId={frc2.CallId}" : "") +
+                (content is TextContent tc2 ? $" Text={tc2.Text?[..Math.Min(50, tc2.Text?.Length ?? 0)]}" : ""));
+
             if (token.IsCancellationRequested) break;
 
             try
@@ -187,7 +212,7 @@ public partial class AgentSession : ObservableObject, IAgentSession
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"ProcessUpdateContents error: {ex.Message}");
+                Console.WriteLine($"ProcessUpdateContents error: {ex.Message}");
             }
         }
     }

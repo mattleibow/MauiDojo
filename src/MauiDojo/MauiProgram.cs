@@ -108,16 +108,15 @@ public static class MauiProgram
         });
 
         // 3. Human in the Loop — plan confirmation
+        // Instructions are set via Session.SystemInstructions in the ViewModel
         services.AddKeyedSingleton<AIAgent>("human-in-the-loop", (sp, _) =>
         {
             HttpClient httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient("aguiserver");
             AGUIChatClient aguiChatClient = new(httpClient, "human_in_the_loop");
 
-            AIAgent baseAgent = new ChatClientAgent(aguiChatClient,
+            return (AIAgent)new ChatClientAgent(aguiChatClient,
                 name: "HumanInTheLoopAssistant",
                 description: "A helpful assistant that creates plans and asks for user confirmation");
-
-            return new HumanInTheLoopAgent(baseAgent);
         });
 
         // 4. Tool-Based Generative UI — haiku generator

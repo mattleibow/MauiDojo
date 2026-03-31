@@ -87,6 +87,24 @@ public partial class HumanInTheLoopViewModel : ObservableObject, IDisposable
         IAgentSessionFactory factory)
     {
         Session = factory.Create(agent);
+
+        // System instructions that tell the model to use tools for plan workflow
+        Session.SystemInstructions = """
+            You help users create and execute plans. Follow this workflow:
+
+            1. When asked to create a plan, use the `create_plan` tool with a list of step descriptions.
+            2. IMMEDIATELY after creating a plan, call `confirm_plan` with the plan object to ask for user approval.
+            3. Wait for the user to confirm which steps they want to proceed with.
+            4. Once confirmed, use `update_plan_step` to mark steps as 'completed' as you execute them.
+
+            IMPORTANT:
+            - Always call `confirm_plan` right after `create_plan` - don't skip this step!
+            - The plan parameter for `confirm_plan` should be the exact plan object returned from `create_plan`.
+            - Do NOT start executing steps until the user confirms.
+            - After receiving confirmation, update each selected step to 'completed' status.
+            - Do NOT output any text messages - ONLY use the tools.
+            """;
+
         RegisterFrontendTools();
     }
 
@@ -117,6 +135,9 @@ public partial class HumanInTheLoopViewModel : ObservableObject, IDisposable
     private Plan CreatePlan(
         [Description("List of step descriptions to create the plan.")] List<string> steps)
     {
+        try { File.AppendAllText(Path.Combine(FileSystem.AppDataDirectory, "agent-debug.log"),
+            $"{DateTime.Now}: CreatePlan called with {steps.Count} steps\n"); } catch { }
+
         var plan = new Plan
         {
             Steps = steps.Select(s => new Step
@@ -139,8 +160,18 @@ public partial class HumanInTheLoopViewModel : ObservableObject, IDisposable
     private async Task<PlanConfirmationResult> ConfirmPlanAsync(
         [Description("The plan to present to the user for confirmation.")] Plan plan)
     {
+        try { File.AppendAllText(Path.Combine(FileSystem.AppDataDirectory, "agent-debug.log"),
+            $"{DateTime.Now}: ConfirmPlanAsync called, setting IsAwaitingConfirmation=true\n"); } catch { }
+
         await MainThread.InvokeOnMainThreadAsync(() => IsAwaitingConfirmation = true);
+
+        try { File.AppendAllText(Path.Combine(FileSystem.AppDataDirectory, "agent-debug.log"),
+            $"{DateTime.Now}: ConfirmPlanAsync waiting for response...\n"); } catch { }
+
         var response = await Session.WaitForResponse("confirm_plan");
+
+        try { File.AppendAllText(Path.Combine(FileSystem.AppDataDirectory, "agent-debug.log"),
+            $"{DateTime.Now}: ConfirmPlanAsync got response: {response?.GetType().Name}\n"); } catch { }
 
         if (response is PlanConfirmationResult result)
             return result;

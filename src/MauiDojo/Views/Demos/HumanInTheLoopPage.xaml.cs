@@ -1,6 +1,5 @@
 // Copyright (c) Microsoft. All rights reserved.
 
-using System.Collections.Specialized;
 using MauiDojo.ViewModels;
 using Microsoft.Extensions.AI;
 
@@ -27,52 +26,20 @@ public partial class HumanInTheLoopPage : ContentPage
         }
     }
 
-    protected override void OnBindingContextChanged()
-    {
-        base.OnBindingContextChanged();
-
-        if (BindingContext is HumanInTheLoopViewModel vm)
-        {
-            // Toggle empty view based on message count
-            vm.Session.Messages.CollectionChanged += OnMessagesChanged;
-            vm.Session.PendingMessages.CollectionChanged += OnMessagesChanged;
-            UpdateEmptyView(vm);
-        }
-    }
-
-    private void OnMessagesChanged(object? sender, NotifyCollectionChangedEventArgs e)
-    {
-        if (BindingContext is HumanInTheLoopViewModel vm)
-        {
-            MainThread.BeginInvokeOnMainThread(() =>
-            {
-                UpdateEmptyView(vm);
-                // Auto-scroll to bottom
-                MessagesScrollView.ScrollToAsync(0, MessagesScrollView.ContentSize.Height, true);
-            });
-        }
-    }
-
-    private void UpdateEmptyView(HumanInTheLoopViewModel vm)
-    {
-        EmptyView.IsVisible = vm.Session.Messages.Count == 0 && vm.Session.PendingMessages.Count == 0;
-    }
-
     private async void OnSendClicked(object? sender, EventArgs e)
     {
-        var session = (BindingContext as dynamic)?.Session as MauiDojo.Agent.Maui.Services.IAgentSession;
-        if (session is null) return;
+        if (BindingContext is not HumanInTheLoopViewModel vm) return;
         var text = InputEntry.Text?.Trim();
         if (string.IsNullOrEmpty(text)) return;
         InputEntry.Text = string.Empty;
-        await session.SendAsync(new ChatMessage(ChatRole.User, text));
+        await vm.Session.SendAsync(new ChatMessage(ChatRole.User, text));
     }
 
     private async void OnSuggestionClicked(object? sender, EventArgs e)
     {
-        var session = (BindingContext as dynamic)?.Session as MauiDojo.Agent.Maui.Services.IAgentSession;
-        if (session is null || sender is not Button btn) return;
-        if (SuggestionMessages.TryGetValue(btn.Text, out var message))
-            await session.SendAsync(new ChatMessage(ChatRole.User, message));
+        if (BindingContext is not HumanInTheLoopViewModel vm) return;
+        if (sender is not Button btn) return;
+        var message = SuggestionMessages.GetValueOrDefault(btn.Text, btn.Text);
+        await vm.Session.SendAsync(new ChatMessage(ChatRole.User, message));
     }
 }
