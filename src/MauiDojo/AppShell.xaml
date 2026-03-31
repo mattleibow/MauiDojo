@@ -4,7 +4,8 @@
        xmlns:demos="clr-namespace:MauiDojo.Views.Demos"
        x:Class="MauiDojo.AppShell"
        Title="MAUI Dojo"
-       Shell.FlyoutBehavior="Flyout"
+       Shell.FlyoutBehavior="Locked"
+       FlyoutWidth="280"
        FlyoutHeaderBehavior="Fixed">
 
     <Shell.FlyoutHeader>

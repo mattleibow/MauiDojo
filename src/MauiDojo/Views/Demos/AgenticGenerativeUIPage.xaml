@@ -1,7 +1,55 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             xmlns:local="clr-namespace:MauiDojo.Converters"
              x:Class="MauiDojo.Views.Demos.AgenticGenerativeUIPage"
-             Title="AgenticGenerativeUI">
-    <Label Text="AgenticGenerativeUI" VerticalOptions="Center" HorizontalOptions="Center" />
+             Title="Agentic Generative UI">
+
+    <ContentPage.Resources>
+        <toolkit:InvertedBoolConverter x:Key="InverseBoolConverter" />
+        <local:BoolToColorConverter x:Key="BoolToColorConverter" />
+        <local:BoolToTextColorConverter x:Key="BoolToTextColorConverter" />
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="*,Auto,Auto">
+        <CollectionView Grid.Row="0" x:Name="MessagesView" Margin="8"
+                        ItemsSource="{Binding Session.Messages}" SelectionMode="None">
+            <CollectionView.EmptyView>
+                <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="8">
+                    <Label Text="🥋" FontSize="48" HorizontalOptions="Center" />
+                    <Label Text="Agentic Generative UI" FontSize="16" TextColor="Gray" HorizontalOptions="Center" />
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Frame Margin="4,2" Padding="12,8" CornerRadius="12" HasShadow="False"
+                           BackgroundColor="{Binding IsUser, Converter={StaticResource BoolToColorConverter}}">
+                        <Label Text="{Binding Text}"
+                               TextColor="{Binding IsUser, Converter={StaticResource BoolToTextColorConverter}}" />
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <HorizontalStackLayout Grid.Row="1" Spacing="8" Margin="8,4"
+                               IsVisible="{Binding Session.IsProcessing, Converter={StaticResource InverseBoolConverter}}">
+            <Button Text="🚀 Plan a trip to Mars" Clicked="OnSuggestionClicked"
+                    FontSize="12" Padding="12,6" CornerRadius="16"
+                    BackgroundColor="#F3F4F6" TextColor="#6366F1" />
+            <Button Text="🍕 Make pizza from scratch" Clicked="OnSuggestionClicked"
+                    FontSize="12" Padding="12,6" CornerRadius="16"
+                    BackgroundColor="#F3F4F6" TextColor="#6366F1" />
+            <Button Text="🏠 Build a treehouse" Clicked="OnSuggestionClicked"
+                    FontSize="12" Padding="12,6" CornerRadius="16"
+                    BackgroundColor="#F3F4F6" TextColor="#6366F1" />
+        </HorizontalStackLayout>
+
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="8" ColumnSpacing="8">
+            <Entry x:Name="InputEntry" Placeholder="Type a message..."
+                   IsEnabled="{Binding Session.IsProcessing, Converter={StaticResource InverseBoolConverter}}" />
+            <Button Grid.Column="1" Text="Send" Clicked="OnSendClicked"
+                    BackgroundColor="#6366F1" TextColor="White" CornerRadius="8" />
+        </Grid>
+    </Grid>
 </ContentPage>
