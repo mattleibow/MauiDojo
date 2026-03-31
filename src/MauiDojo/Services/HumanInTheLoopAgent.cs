@@ -34,23 +34,24 @@ public sealed class HumanInTheLoopAgent : DelegatingAIAgent
     {
     }
 
-    public override Task<AgentRunResponse> RunAsync(
-        IEnumerable<ChatMessage> messages,
-        AgentThread? thread = null,
+    public new IAsyncEnumerable<AgentResponseUpdate> RunStreamingAsync(
+        AgentSession? session = null,
         AgentRunOptions? options = null,
         CancellationToken cancellationToken = default)
     {
-        var messagesWithInstructions = messages.Prepend(InstructionsMessage);
-        return base.RunAsync(messagesWithInstructions, thread, options, cancellationToken);
+        options ??= new AgentRunOptions();
+        options.AdditionalProperties ??= [];
+        options.AdditionalProperties["ag_ui_instructions"] = InstructionsMessage.Text;
+        return InnerAgent.RunStreamingAsync(session, options, cancellationToken);
     }
 
-    public override IAsyncEnumerable<AgentRunResponseUpdate> RunStreamingAsync(
+    public new IAsyncEnumerable<AgentResponseUpdate> RunStreamingAsync(
         IEnumerable<ChatMessage> messages,
-        AgentThread? thread = null,
+        AgentSession? session = null,
         AgentRunOptions? options = null,
         CancellationToken cancellationToken = default)
     {
         var messagesWithInstructions = messages.Prepend(InstructionsMessage);
-        return base.RunStreamingAsync(messagesWithInstructions, thread, options, cancellationToken);
+        return base.RunStreamingAsync(messagesWithInstructions, session, options, cancellationToken);
     }
 }

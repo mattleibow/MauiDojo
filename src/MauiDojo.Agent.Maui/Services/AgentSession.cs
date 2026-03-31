@@ -79,7 +79,7 @@ public partial class AgentSession : ObservableObject, IAgentSession
 
             ChatMessageViewModel? currentPending = null;
 
-            await foreach (var update in _agent.RunStreamingAsync(chatHistory, thread: null, options: options, cancellationToken: token))
+            await foreach (var update in _agent.RunStreamingAsync(chatHistory, session: null, options: options, cancellationToken: token))
             {
                 token.ThrowIfCancellationRequested();
 
@@ -121,7 +121,7 @@ public partial class AgentSession : ObservableObject, IAgentSession
     }
 
     private async Task ProcessUpdateContentsAsync(
-        AgentRunResponseUpdate update,
+        AgentResponseUpdate update,
         ChatMessageViewModel currentPending,
         CancellationToken token)
     {

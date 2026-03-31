@@ -88,10 +88,7 @@ public static class MauiProgram
 
             AITool[] frontendTools = [AIFunctionFactory.Create(ChangeBackground)];
 
-            return aguiChatClient.CreateAIAgent(
-                name: "AgenticChatAssistant",
-                description: "A helpful assistant for the agentic chat demo",
-                tools: frontendTools);
+            return new ChatClientAgent(aguiChatClient, name: "AgenticChatAssistant", description: "A helpful assistant for the agentic chat demo", tools: frontendTools);
         });
 
         // 2. Backend Tool Rendering — weather demo (server-side tool)
@@ -100,9 +97,7 @@ public static class MauiProgram
             HttpClient httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient("aguiserver");
             AGUIChatClient aguiChatClient = new(httpClient, "backend_tool_rendering");
 
-            return aguiChatClient.CreateAIAgent(
-                name: "BackendToolRenderingAssistant",
-                description: "A helpful assistant that can look up weather information");
+            return new ChatClientAgent(aguiChatClient, name: "BackendToolRenderingAssistant", description: "A helpful assistant that can look up weather information");
         });
 
         // 3. Human in the Loop — plan confirmation
@@ -111,7 +106,7 @@ public static class MauiProgram
             HttpClient httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient("aguiserver");
             AGUIChatClient aguiChatClient = new(httpClient, "human_in_the_loop");
 
-            AIAgent baseAgent = aguiChatClient.CreateAIAgent(
+            AIAgent baseAgent = new ChatClientAgent(aguiChatClient,
                 name: "HumanInTheLoopAssistant",
                 description: "A helpful assistant that creates plans and asks for user confirmation");
 
@@ -124,9 +119,7 @@ public static class MauiProgram
             HttpClient httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient("aguiserver");
             AGUIChatClient aguiChatClient = new(httpClient, "tool_based_generative_ui");
 
-            return aguiChatClient.CreateAIAgent(
-                name: "ToolBasedGenerativeUIAssistant",
-                description: "A helpful assistant that generates haikus with Japanese text and images");
+            return new ChatClientAgent(aguiChatClient, name: "ToolBasedGenerativeUIAssistant", description: "A helpful assistant that generates haikus with Japanese text and images");
         });
 
         // 5. Agentic Generative UI — plan progress
@@ -135,9 +128,7 @@ public static class MauiProgram
             HttpClient httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient("aguiserver");
             AGUIChatClient aguiChatClient = new(httpClient, "agentic_generative_ui");
 
-            return aguiChatClient.CreateAIAgent(
-                name: "AgenticGenerativeUIAssistant",
-                description: "A helpful assistant that executes long-running tasks and shows progress");
+            return new ChatClientAgent(aguiChatClient, name: "AgenticGenerativeUIAssistant", description: "A helpful assistant that executes long-running tasks and shows progress");
         });
 
         // 6. Shared State — recipe copilot
@@ -146,9 +137,7 @@ public static class MauiProgram
             HttpClient httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient("aguiserver");
             AGUIChatClient aguiChatClient = new(httpClient, "shared_state");
 
-            return aguiChatClient.CreateAIAgent(
-                name: "SharedStateAssistant",
-                description: "A recipe copilot that reads and updates collaboratively");
+            return new ChatClientAgent(aguiChatClient, name: "SharedStateAssistant", description: "A recipe copilot that reads and updates collaboratively");
         });
 
         // 7. Predictive State Updates — document editor
@@ -157,9 +146,7 @@ public static class MauiProgram
             HttpClient httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient("aguiserver");
             AGUIChatClient aguiChatClient = new(httpClient, "predictive_state_updates");
 
-            return aguiChatClient.CreateAIAgent(
-                name: "PredictiveStateUpdatesAssistant",
-                description: "An AI document editor that streams content updates");
+            return new ChatClientAgent(aguiChatClient, name: "PredictiveStateUpdatesAssistant", description: "An AI document editor that streams content updates");
         });
     }
 }
