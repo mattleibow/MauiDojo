@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
        xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-       xmlns:views="clr-namespace:MauiDojo.Views"
        xmlns:demos="clr-namespace:MauiDojo.Views.Demos"
        x:Class="MauiDojo.AppShell"
        Title="MAUI Dojo"
@@ -9,7 +8,7 @@
        FlyoutHeaderBehavior="Fixed">
 
     <Shell.FlyoutHeader>
-        <VerticalStackLayout Padding="16" BackgroundColor="{StaticResource Primary}">
+        <VerticalStackLayout Padding="16" BackgroundColor="#6366F1">
             <Label Text="🥋 MAUI Dojo"
                    FontSize="24"
                    FontAttributes="Bold"
@@ -21,32 +20,25 @@
         </VerticalStackLayout>
     </Shell.FlyoutHeader>
 
-    <FlyoutItem Title="💬 Agentic Chat" Route="AgenticChat">
-        <ShellContent ContentTemplate="{DataTemplate demos:AgenticChatPage}" />
-    </FlyoutItem>
+    <ShellContent Title="💬 Agentic Chat" Route="AgenticChat"
+                  ContentTemplate="{DataTemplate demos:AgenticChatPage}" />
 
-    <FlyoutItem Title="🌤️ Backend Tool Rendering" Route="BackendToolRendering">
-        <ShellContent ContentTemplate="{DataTemplate demos:BackendToolRenderingPage}" />
-    </FlyoutItem>
+    <ShellContent Title="🌤️ Backend Tool Rendering" Route="BackendToolRendering"
+                  ContentTemplate="{DataTemplate demos:BackendToolRenderingPage}" />
 
-    <FlyoutItem Title="🙋 Human in the Loop" Route="HumanInTheLoop">
-        <ShellContent ContentTemplate="{DataTemplate demos:HumanInTheLoopPage}" />
-    </FlyoutItem>
+    <ShellContent Title="🙋 Human in the Loop" Route="HumanInTheLoop"
+                  ContentTemplate="{DataTemplate demos:HumanInTheLoopPage}" />
 
-    <FlyoutItem Title="📊 Agentic Generative UI" Route="AgenticGenerativeUI">
-        <ShellContent ContentTemplate="{DataTemplate demos:AgenticGenerativeUIPage}" />
-    </FlyoutItem>
+    <ShellContent Title="📊 Agentic Generative UI" Route="AgenticGenerativeUI"
+                  ContentTemplate="{DataTemplate demos:AgenticGenerativeUIPage}" />
 
-    <FlyoutItem Title="🎋 Tool-Based Generative UI" Route="ToolBasedGenerativeUI">
-        <ShellContent ContentTemplate="{DataTemplate demos:ToolBasedGenerativeUIPage}" />
-    </FlyoutItem>
+    <ShellContent Title="🎋 Tool-Based Generative UI" Route="ToolBasedGenerativeUI"
+                  ContentTemplate="{DataTemplate demos:ToolBasedGenerativeUIPage}" />
 
-    <FlyoutItem Title="🍳 Shared State" Route="SharedState">
-        <ShellContent ContentTemplate="{DataTemplate demos:SharedStatePage}" />
-    </FlyoutItem>
+    <ShellContent Title="🍳 Shared State" Route="SharedState"
+                  ContentTemplate="{DataTemplate demos:SharedStatePage}" />
 
-    <FlyoutItem Title="📝 Predictive State Updates" Route="PredictiveStateUpdates">
-        <ShellContent ContentTemplate="{DataTemplate demos:PredictiveStateUpdatesPage}" />
-    </FlyoutItem>
+    <ShellContent Title="📝 Predictive State Updates" Route="PredictiveStateUpdates"
+                  ContentTemplate="{DataTemplate demos:PredictiveStateUpdatesPage}" />
 
 </Shell>

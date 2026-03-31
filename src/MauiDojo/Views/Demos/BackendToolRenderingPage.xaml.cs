@@ -6,9 +6,17 @@ namespace MauiDojo.Views.Demos;
 
 public partial class BackendToolRenderingPage : ContentPage
 {
-    public BackendToolRenderingPage(BackendToolRenderingViewModel viewModel)
+    public BackendToolRenderingPage()
     {
         InitializeComponent();
-        BindingContext = viewModel;
+
+        try
+        {
+            BindingContext = App.Current?.Handler?.MauiContext?.Services.GetService<BackendToolRenderingViewModel>();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"BackendToolRenderingPage: VM error: {ex.Message}");
+        }
     }
 }

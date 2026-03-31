@@ -6,9 +6,17 @@ namespace MauiDojo.Views.Demos;
 
 public partial class ToolBasedGenerativeUIPage : ContentPage
 {
-    public ToolBasedGenerativeUIPage(ToolBasedGenerativeUIViewModel viewModel)
+    public ToolBasedGenerativeUIPage()
     {
         InitializeComponent();
-        BindingContext = viewModel;
+
+        try
+        {
+            BindingContext = App.Current?.Handler?.MauiContext?.Services.GetService<ToolBasedGenerativeUIViewModel>();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"ToolBasedGenerativeUIPage: VM error: {ex.Message}");
+        }
     }
 }

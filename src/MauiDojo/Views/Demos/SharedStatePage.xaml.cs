@@ -6,9 +6,17 @@ namespace MauiDojo.Views.Demos;
 
 public partial class SharedStatePage : ContentPage
 {
-    public SharedStatePage(SharedStateViewModel viewModel)
+    public SharedStatePage()
     {
         InitializeComponent();
-        BindingContext = viewModel;
+
+        try
+        {
+            BindingContext = App.Current?.Handler?.MauiContext?.Services.GetService<SharedStateViewModel>();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"SharedStatePage: VM error: {ex.Message}");
+        }
     }
 }

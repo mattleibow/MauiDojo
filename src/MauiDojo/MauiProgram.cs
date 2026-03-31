@@ -10,6 +10,9 @@ using Microsoft.Agents.AI;
 using Microsoft.Agents.AI.AGUI;
 using Microsoft.Extensions.AI;
 using System.ComponentModel;
+#if DEBUG
+using MauiDevFlow.Agent;
+#endif
 
 namespace MauiDojo;
 
@@ -27,6 +30,10 @@ public static class MauiProgram
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             });
+
+#if DEBUG
+        builder.AddMauiDevFlowAgent();
+#endif
 
         // AG-UI server URL (matches the Blazor sample's default)
         string serverUrl = "http://localhost:5018";

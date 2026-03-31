@@ -6,9 +6,17 @@ namespace MauiDojo.Views.Demos;
 
 public partial class AgenticGenerativeUIPage : ContentPage
 {
-    public AgenticGenerativeUIPage(AgenticGenerativeUIViewModel viewModel)
+    public AgenticGenerativeUIPage()
     {
         InitializeComponent();
-        BindingContext = viewModel;
+
+        try
+        {
+            BindingContext = App.Current?.Handler?.MauiContext?.Services.GetService<AgenticGenerativeUIViewModel>();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"AgenticGenerativeUIPage: VM error: {ex.Message}");
+        }
     }
 }

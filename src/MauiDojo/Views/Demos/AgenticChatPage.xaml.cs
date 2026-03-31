@@ -6,9 +6,17 @@ namespace MauiDojo.Views.Demos;
 
 public partial class AgenticChatPage : ContentPage
 {
-    public AgenticChatPage(AgenticChatViewModel viewModel)
+    public AgenticChatPage()
     {
         InitializeComponent();
-        BindingContext = viewModel;
+
+        try
+        {
+            BindingContext = App.Current?.Handler?.MauiContext?.Services.GetService<AgenticChatViewModel>();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"AgenticChatPage: VM error: {ex.Message}");
+        }
     }
 }

@@ -6,9 +6,17 @@ namespace MauiDojo.Views.Demos;
 
 public partial class PredictiveStateUpdatesPage : ContentPage
 {
-    public PredictiveStateUpdatesPage(PredictiveStateUpdatesViewModel viewModel)
+    public PredictiveStateUpdatesPage()
     {
         InitializeComponent();
-        BindingContext = viewModel;
+
+        try
+        {
+            BindingContext = App.Current?.Handler?.MauiContext?.Services.GetService<PredictiveStateUpdatesViewModel>();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"PredictiveStateUpdatesPage: VM error: {ex.Message}");
+        }
     }
 }
